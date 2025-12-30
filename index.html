@@ -8,6 +8,9 @@
     <title>Redes Balconeras - Ferretería Carnevale</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+    <!-- Incluir jsPDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* RESET Y ESTILOS BASE */
         * {
@@ -236,6 +239,47 @@
         .btn-secondary:active {
             background: #e0e0e0;
             transform: translateY(2px);
+        }
+        
+        .btn-success {
+            background: #4caf50;
+            color: white;
+            margin-top: 0.75rem;
+        }
+        
+        .btn-success:active {
+            background: #3d8b40;
+            transform: translateY(2px);
+        }
+        
+        /* CHECKBOX IVA */
+        .iva-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .iva-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #0a5c36;
+        }
+        
+        .iva-option label {
+            font-weight: 600;
+            color: #444;
+            margin: 0;
+        }
+        
+        .iva-option .iva-info {
+            font-size: 0.85rem;
+            color: #666;
+            margin-left: auto;
         }
         
         /* RESULTADOS */
@@ -883,7 +927,7 @@
                         <input type="number" id="precio-red" min="0" step="0.01" value="4.50">
                     </div>
                     <div class="price-input">
-                        <label>Pitón c/30cm</label>
+                        <label>Pitón N6</label>
                         <input type="number" id="precio-piton" min="0" step="0.01" value="0.80">
                     </div>
                     <div class="price-input">
@@ -891,10 +935,17 @@
                         <input type="number" id="precio-soga" min="0" step="0.01" value="0.25">
                     </div>
                     <div class="price-input">
-                        <label>Tarugo</label>
+                        <label>Tarugo N6</label>
                         <input type="number" id="precio-tarugo" min="0" step="0.01" value="0.10">
                     </div>
                 </div>
+            </div>
+            
+            <!-- OPCIÓN DE IVA -->
+            <div class="iva-option">
+                <input type="checkbox" id="incluir-iva" checked>
+                <label for="incluir-iva">Incluir IVA (21%)</label>
+                <div class="iva-info" id="iva-info">IVA incluido</div>
             </div>
             
             <!-- CONFIGURACIONES ADICIONALES -->
@@ -916,6 +967,7 @@
             
             <button class="btn btn-primary" id="calcular-presupuesto">Calcular Presupuesto</button>
             <button class="btn btn-secondary" id="guardar-precios">Guardar Precios</button>
+            <button class="btn btn-success" id="exportar-pdf">📄 Exportar a PDF</button>
             
             <!-- RESULTADO PRESUPUESTO -->
             <div class="result" id="presupuesto-result" style="display:none;">
@@ -938,6 +990,14 @@
                 
                 <!-- RESUMEN FINAL -->
                 <div class="budget-summary">
+                    <div class="summary-row">
+                        <span>Subtotal materiales:</span>
+                        <span id="subtotal-materiales">$0.00</span>
+                    </div>
+                    <div class="summary-row" id="iva-row">
+                        <span>IVA (21%):</span>
+                        <span id="iva-calculado">$0.00</span>
+                    </div>
                     <div class="summary-row">
                         <span>TOTAL:</span>
                         <span id="total-presupuesto">$0.00</span>
@@ -1057,7 +1117,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.5 • Sistema de presupuestos • Aplicación offline</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.6 • Sistema de presupuestos • Exportar PDF • Aplicación offline</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -1088,15 +1148,16 @@
             rombosPorMetro: 14,
             margenSeguridad: 15,
             extraSogaNudos: 10, // porcentaje extra para nudos
-            distanciaPitones: 30 // distancia en cm entre pitones
+            distanciaPitones: 30, // distancia en cm entre pitones
+            incluirIVA: true // IVA opcional, por defecto activado
         };
         
         // PRECIOS POR DEFECTO (RED POR M²)
         const precios = {
-            red: 4.50,    // por m² (cambio importante)
-            piton: 0.80,   // cada pitón
+            red: 4.50,    // por m²
+            piton: 0.80,   // cada pitón N6
             soga: 0.25,    // por metro lineal
-            tarugo: 0.10   // cada tarugo
+            tarugo: 0.10   // cada tarugo N6
         };
         
         // MENSAJES COMERCIALES (OBLIGATORIOS)
@@ -1109,8 +1170,12 @@
             "Presupuestos calculados en base a precios actuales.",
             "Cotización válida por 30 días.",
             "Red vendida por metro cuadrado.",
-            "Todos los precios son sin IVA."
+            "Todos los precios pueden incluir IVA (opcional).",
+            "Pitones y tarugos N6 para instalación profesional."
         ];
+        
+        // DATOS PARA PDF
+        let datosPresupuesto = null;
         
         // ELEMENTOS DEL DOM
         const elementos = {
@@ -1136,6 +1201,11 @@
             precioSoga: document.getElementById('precio-soga'),
             precioTarugo: document.getElementById('precio-tarugo'),
             
+            // Opción IVA
+            incluirIVACheckbox: document.getElementById('incluir-iva'),
+            ivaInfo: document.getElementById('iva-info'),
+            ivaRow: document.getElementById('iva-row'),
+            
             // Configuración presupuesto
             extraSogaSlider: document.getElementById('extra-soga'),
             distanciaPitonesSlider: document.getElementById('distancia-pitones'),
@@ -1159,6 +1229,7 @@
             calcularSuperficieBtn: document.getElementById('calcular-superficie'),
             calcularPresupuestoBtn: document.getElementById('calcular-presupuesto'),
             guardarPreciosBtn: document.getElementById('guardar-precios'),
+            exportarPDFBtn: document.getElementById('exportar-pdf'),
             validarRecorteBtn: document.getElementById('validar-recorre'),
             
             // Resultados
@@ -1169,6 +1240,8 @@
             
             // Tabla de presupuesto
             budgetTableBody: document.getElementById('budget-table-body'),
+            subtotalMateriales: document.getElementById('subtotal-materiales'),
+            ivaCalculado: document.getElementById('iva-calculado'),
             totalPresupuesto: document.getElementById('total-presupuesto'),
             
             // Configuración general
@@ -1208,6 +1281,9 @@
             // Configurar selector de tipo en validación
             configurarSelectorValidacion();
             
+            // Configurar evento IVA
+            configurarIVA();
+            
             // Mostrar mensaje comercial aleatorio
             mostrarMensajeComercialAleatorio();
             
@@ -1227,17 +1303,20 @@
                 config.margenSeguridad = parsedConfig.margenSeguridad || 15;
                 config.extraSogaNudos = parsedConfig.extraSogaNudos || 10;
                 config.distanciaPitones = parsedConfig.distanciaPitones || 30;
+                config.incluirIVA = parsedConfig.incluirIVA !== undefined ? parsedConfig.incluirIVA : true;
                 
                 // Actualizar controles
                 elementos.rombosPorMetroSlider.value = config.rombosPorMetro;
                 elementos.margenSeguridadSlider.value = config.margenSeguridad;
                 elementos.extraSogaSlider.value = config.extraSogaNudos;
                 elementos.distanciaPitonesSlider.value = config.distanciaPitones;
+                elementos.incluirIVACheckbox.checked = config.incluirIVA;
                 
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
                 elementos.extraSogaValue.textContent = config.extraSogaNudos + '%';
                 elementos.distanciaPitonesValue.textContent = config.distanciaPitones + ' cm';
+                elementos.ivaInfo.textContent = config.incluirIVA ? 'IVA incluido' : 'Sin IVA';
             }
         }
         
@@ -1275,6 +1354,20 @@
             
             // Mostrar confirmación
             mostrarMensajeTemporal('Precios guardados correctamente', 'success');
+        }
+        
+        // CONFIGURAR IVA
+        function configurarIVA() {
+            elementos.incluirIVACheckbox.addEventListener('change', function() {
+                config.incluirIVA = this.checked;
+                elementos.ivaInfo.textContent = config.incluirIVA ? 'IVA incluido' : 'Sin IVA';
+                guardarConfiguracion();
+                
+                // Recalcular presupuesto si está activo
+                if (elementos.presupuestoResult.style.display === 'block') {
+                    calcularPresupuesto();
+                }
+            });
         }
         
         // CONFIGURAR NAVEGACIÓN ENTRE MODOS
@@ -1359,6 +1452,7 @@
             // Modo presupuesto
             elementos.calcularPresupuestoBtn.addEventListener('click', calcularPresupuesto);
             elementos.guardarPreciosBtn.addEventListener('click', guardarPrecios);
+            elementos.exportarPDFBtn.addEventListener('click', exportarPDF);
             
             // Eventos para recálculo automático en presupuesto
             elementos.presAncho.addEventListener('input', calcularPresupuesto);
@@ -1367,6 +1461,7 @@
             elementos.precioPiton.addEventListener('input', calcularPresupuesto);
             elementos.precioSoga.addEventListener('input', calcularPresupuesto);
             elementos.precioTarugo.addEventListener('input', calcularPresupuesto);
+            elementos.incluirIVACheckbox.addEventListener('change', calcularPresupuesto);
             
             // Modo validar recorte
             elementos.validarRecorteBtn.addEventListener('click', validarRecorte);
@@ -1558,7 +1653,7 @@
             }
         }
         
-        // CÁLCULO MODO PRESUPUESTO (RED POR M², SIN IVA)
+        // CÁLCULO MODO PRESUPUESTO (RED POR M², IVA OPCIONAL)
         function calcularPresupuesto() {
             const ancho = parseFloat(elementos.presAncho.value) || 2.0;
             const alto = parseFloat(elementos.presAlto.value) || 1.5;
@@ -1567,7 +1662,6 @@
             const perimetro = 2 * (ancho + alto); // en metros
             
             // 1. Calcular superficie con margen para la red
-            // Primero calculamos los rombos con margen
             const rombosAnchoBase = Math.ceil(ancho * config.rombosPorMetro);
             const rombosAltoBase = Math.ceil(alto * config.rombosPorMetro);
             const factorMargen = 1 + (config.margenSeguridad / 100);
@@ -1580,7 +1674,7 @@
             const altoConMargen = rombosAltoMargen / config.rombosPorMetro;
             const superficieConMargen = anchoConMargen * altoConMargen;
             
-            // 2. Calcular pitones (cada X cm)
+            // 2. Calcular pitones N6 (cada X cm)
             const distanciaPitonesMetros = config.distanciaPitones / 100; // convertir a metros
             const pitones = Math.ceil(perimetro / distanciaPitonesMetros);
             
@@ -1588,7 +1682,7 @@
             const extraSoga = 1 + (config.extraSogaNudos / 100);
             const metrosSoga = perimetro * extraSoga;
             
-            // 4. Tarugos (misma cantidad que pitones)
+            // 4. Tarugos N6 (misma cantidad que pitones)
             const tarugos = pitones;
             
             // Obtener precios actuales
@@ -1603,8 +1697,10 @@
             const subtotalSoga = metrosSoga * precioSoga;
             const subtotalTarugos = tarugos * precioTarugo;
             
-            // Calcular total (sin IVA)
-            const total = subtotalRed + subtotalPitones + subtotalSoga + subtotalTarugos;
+            // Calcular totales
+            const subtotalMateriales = subtotalRed + subtotalPitones + subtotalSoga + subtotalTarugos;
+            const iva = config.incluirIVA ? subtotalMateriales * 0.21 : 0; // 21% IVA opcional
+            const total = subtotalMateriales + iva;
             
             // Mostrar resultados
             elementos.presupuestoResult.style.display = 'block';
@@ -1622,7 +1718,7 @@
                     subtotal: subtotalRed 
                 },
                 { 
-                    nombre: 'Pitones', 
+                    nombre: 'Pitón N6', 
                     cantidad: pitones, 
                     unidad: 'unidades', 
                     precio: precioPiton, 
@@ -1636,7 +1732,7 @@
                     subtotal: subtotalSoga 
                 },
                 { 
-                    nombre: 'Tarugos', 
+                    nombre: 'Tarugo N6', 
                     cantidad: tarugos, 
                     unidad: 'unidades', 
                     precio: precioTarugo, 
@@ -1658,14 +1754,42 @@
             // Agregar fila de total
             const totalRow = document.createElement('tr');
             totalRow.className = 'total-row';
+            const totalText = config.incluirIVA ? 'TOTAL (IVA incluido)' : 'TOTAL (sin IVA)';
             totalRow.innerHTML = `
-                <td colspan="3"><strong>TOTAL (SIN IVA)</strong></td>
+                <td colspan="3"><strong>${totalText}</strong></td>
                 <td class="total"><strong>$${total.toFixed(2)}</strong></td>
             `;
             elementos.budgetTableBody.appendChild(totalRow);
             
             // Actualizar resumen
+            elementos.subtotalMateriales.textContent = `$${subtotalMateriales.toFixed(2)}`;
+            
+            // Mostrar u ocultar fila de IVA según configuración
+            if (config.incluirIVA) {
+                elementos.ivaRow.style.display = 'flex';
+                elementos.ivaCalculado.textContent = `$${iva.toFixed(2)}`;
+            } else {
+                elementos.ivaRow.style.display = 'none';
+            }
+            
             elementos.totalPresupuesto.textContent = `$${total.toFixed(2)}`;
+            
+            // Guardar datos para PDF
+            datosPresupuesto = {
+                fecha: new Date().toLocaleDateString('es-AR'),
+                ancho: ancho,
+                alto: alto,
+                superficie: (ancho * alto).toFixed(2),
+                superficieConMargen: superficieConMargen.toFixed(2),
+                materiales: materiales,
+                subtotalMateriales: subtotalMateriales,
+                iva: iva,
+                total: total,
+                incluirIVA: config.incluirIVA,
+                extraSoga: config.extraSogaNudos,
+                distanciaPitones: config.distanciaPitones,
+                margenSeguridad: config.margenSeguridad
+            };
             
             // Establecer color según total
             if (total < 100) {
@@ -1674,6 +1798,105 @@
                 elementos.presupuestoResult.className = 'result result-warning';
             } else {
                 elementos.presupuestoResult.className = 'result result-danger';
+            }
+        }
+        
+        // EXPORTAR A PDF
+        function exportarPDF() {
+            if (!datosPresupuesto) {
+                mostrarMensajeTemporal('Primero debe calcular un presupuesto', 'warning');
+                return;
+            }
+            
+            try {
+                // Crear instancia de jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Configuración del PDF
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const margin = 15;
+                const contentWidth = pageWidth - (margin * 2);
+                
+                // Logo o título
+                doc.setFontSize(20);
+                doc.setTextColor(10, 92, 54); // Color verde #0a5c36
+                doc.text('Ferretería Carnevale', margin, 20);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('PRESUPUESTO DE REDES BALCONERAS', margin, 30);
+                
+                // Información del presupuesto
+                doc.setFontSize(10);
+                doc.text(`Fecha: ${datosPresupuesto.fecha}`, margin, 40);
+                doc.text(`Medidas: ${datosPresupuesto.ancho}m x ${datosPresupuesto.alto}m`, margin, 46);
+                doc.text(`Superficie: ${datosPresupuesto.superficie} m²`, margin, 52);
+                doc.text(`Superficie con margen (${datosPresupuesto.margenSeguridad}%): ${datosPresupuesto.superficieConMargen} m²`, margin, 58);
+                
+                // Configuración de instalación
+                doc.text(`Configuración: Pitones cada ${datosPresupuesto.distanciaPitones}cm, Soga +${datosPresupuesto.extraSoga}%`, margin, 64);
+                
+                // Tabla de materiales
+                const headers = [['Material', 'Cantidad', 'Precio Unit.', 'Subtotal']];
+                const data = datosPresupuesto.materiales.map(material => [
+                    material.nombre,
+                    `${material.cantidad} ${material.unidad}`,
+                    `$${material.precio.toFixed(2)}`,
+                    `$${material.subtotal.toFixed(2)}`
+                ]);
+                
+                // Añadir subtotal, IVA y total
+                data.push(['', '', 'Subtotal:', `$${datosPresupuesto.subtotalMateriales.toFixed(2)}`]);
+                
+                if (datosPresupuesto.incluirIVA) {
+                    data.push(['', '', 'IVA (21%):', `$${datosPresupuesto.iva.toFixed(2)}`]);
+                }
+                
+                data.push(['', '', 'TOTAL:', `$${datosPresupuesto.total.toFixed(2)}`]);
+                
+                // Configurar la tabla
+                doc.autoTable({
+                    startY: 70,
+                    head: headers,
+                    body: data,
+                    theme: 'grid',
+                    headStyles: { fillColor: [10, 92, 54] }, // Verde #0a5c36
+                    styles: { fontSize: 9 },
+                    columnStyles: {
+                        0: { cellWidth: 80 },
+                        1: { cellWidth: 30, halign: 'center' },
+                        2: { cellWidth: 30, halign: 'right' },
+                        3: { cellWidth: 30, halign: 'right' }
+                    },
+                    margin: { left: margin, right: margin }
+                });
+                
+                // Notas importantes
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Notas importantes:', margin, finalY);
+                doc.text('• Los precios no incluyen mano de obra de instalación.', margin, finalY + 6);
+                doc.text('• Las medidas son aproximadas debido a la flexibilidad del material.', margin, finalY + 12);
+                doc.text('• Cotización válida por 30 días a partir de la fecha de emisión.', margin, finalY + 18);
+                doc.text('• Red vendida por metro cuadrado.', margin, finalY + 24);
+                doc.text(`• ${datosPresupuesto.incluirIVA ? 'IVA incluido' : 'Sin IVA'} en los precios.`, margin, finalY + 30);
+                
+                // Pie de página
+                doc.setFontSize(8);
+                doc.text('Ferretería Carnevale • Herramienta de cálculo de redes balconeras • v1.6', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+                
+                // Guardar el PDF
+                const nombreArchivo = `Presupuesto_Red_Balconera_${datosPresupuesto.fecha.replace(/\//g, '-')}.pdf`;
+                doc.save(nombreArchivo);
+                
+                // Mostrar mensaje de éxito
+                mostrarMensajeTemporal('PDF generado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                mostrarMensajeTemporal('Error al generar PDF. Intente nuevamente.', 'danger');
             }
         }
         
