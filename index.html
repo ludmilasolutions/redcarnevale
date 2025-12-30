@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Herramienta para medir, cortar y validar redes balconeras - Ferretería Carnevale">
+    <meta name="description" content="Herramienta para medir, cortar y calcular presupuestos de redes balconeras - Ferretería Carnevale">
     <meta name="theme-color" content="#0a5c36">
     <title>Redes Balconeras - Ferretería Carnevale</title>
     <link rel="manifest" href="manifest.json">
@@ -227,6 +227,17 @@
             transform: translateY(2px);
         }
         
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 0.75rem;
+        }
+        
+        .btn-secondary:active {
+            background: #e0e0e0;
+            transform: translateY(2px);
+        }
+        
         /* RESULTADOS */
         .result {
             margin-top: 1.5rem;
@@ -297,6 +308,121 @@
             font-size: 0.85rem;
             color: #888;
             margin-top: 0.25rem;
+        }
+        
+        /* TABLA DE PRESUPUESTO */
+        .budget-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .budget-table th {
+            background: #0a5c36;
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .budget-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .budget-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .budget-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .budget-table .total-row {
+            background: #e8f5e9;
+            font-weight: 700;
+            color: #0a5c36;
+        }
+        
+        .budget-table .total-row td {
+            border-top: 2px solid #0a5c36;
+        }
+        
+        .budget-table .quantity {
+            text-align: center;
+        }
+        
+        .budget-table .price {
+            text-align: right;
+        }
+        
+        .budget-table .total {
+            text-align: right;
+            font-weight: 700;
+        }
+        
+        /* INPUTS DE PRECIOS */
+        .price-inputs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .price-input {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .price-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.9rem;
+        }
+        
+        .price-input input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: right;
+        }
+        
+        .price-input input:focus {
+            outline: none;
+            border-color: #0a5c36;
+        }
+        
+        /* RESUMEN DE PRESUPUESTO */
+        .budget-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: #0a5c36;
+            font-size: 1.1rem;
         }
         
         /* MENSAJES COMERCIALES */
@@ -526,6 +652,10 @@
             .result-value.double {
                 grid-column: span 3;
             }
+            
+            .price-inputs {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         /* Ajustes para pantallas muy pequeñas */
@@ -551,6 +681,10 @@
                 grid-column: span 1;
                 grid-template-columns: 1fr;
                 gap: 0.5rem;
+            }
+            
+            .price-inputs {
+                grid-template-columns: 1fr;
             }
         }
         
@@ -591,7 +725,7 @@
     <!-- HEADER -->
     <div class="header">
         <h1>🔧 Redes Balconeras</h1>
-        <p>Herramienta para medir, cortar y validar - Ferretería Carnevale</p>
+        <p>Herramienta para medir, cortar y calcular presupuestos - Ferretería Carnevale</p>
     </div>
     
     <!-- CONTENEDOR PRINCIPAL -->
@@ -600,6 +734,7 @@
         <div class="modes">
             <button class="mode-btn" data-mode="metros">Metros Lineales</button>
             <button class="mode-btn active" data-mode="superficie">Superficie (m²)</button>
+            <button class="mode-btn" data-mode="presupuesto">💰 Presupuesto</button>
             <button class="mode-btn" data-mode="validar">Validar Recorte</button>
         </div>
         
@@ -719,6 +854,109 @@
             </div>
         </div>
         
+        <!-- MODO: PRESUPUESTO -->
+        <div class="card" id="presupuesto-card">
+            <h2>💰 Presupuesto</h2>
+            <p>Calcula el costo total de materiales e instalación</p>
+            
+            <div class="input-group">
+                <label>Dimensiones de la superficie:</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="pres-ancho" min="0.1" step="0.1" value="2.0" placeholder="Ancho">
+                        <span>m</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="pres-alto" min="0.1" step="0.1" value="1.5" placeholder="Alto">
+                        <span>m</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- INPUTS DE PRECIOS -->
+            <div class="input-group">
+                <label>Precios unitarios:</label>
+                <div class="price-inputs">
+                    <div class="price-input">
+                        <label>Red (por rombo)</label>
+                        <input type="number" id="precio-red" min="0" step="0.01" value="0.35">
+                    </div>
+                    <div class="price-input">
+                        <label>Pitón c/30cm</label>
+                        <input type="number" id="precio-piton" min="0" step="0.01" value="0.80">
+                    </div>
+                    <div class="price-input">
+                        <label>Soga (por metro)</label>
+                        <input type="number" id="precio-soga" min="0" step="0.01" value="0.25">
+                    </div>
+                    <div class="price-input">
+                        <label>Tarugo</label>
+                        <input type="number" id="precio-tarugo" min="0" step="0.01" value="0.10">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CONFIGURACIONES ADICIONALES -->
+            <div class="config-panel">
+                <h4>⚙️ Configuración de instalación</h4>
+                
+                <div class="slider-container">
+                    <label>Extra soga por nudos:</label>
+                    <input type="range" id="extra-soga" min="0" max="20" step="1" value="10">
+                    <div class="slider-value" id="extra-soga-value">10%</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>Distancia entre pitones:</label>
+                    <input type="range" id="distancia-pitones" min="20" max="40" step="5" value="30">
+                    <div class="slider-value" id="distancia-pitones-value">30 cm</div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="calcular-presupuesto">Calcular Presupuesto</button>
+            <button class="btn btn-secondary" id="guardar-precios">Guardar Precios</button>
+            
+            <!-- RESULTADO PRESUPUESTO -->
+            <div class="result" id="presupuesto-result" style="display:none;">
+                <h3>💰 Resumen del Presupuesto</h3>
+                
+                <!-- TABLA DE PRESUPUESTO -->
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th class="quantity">Cantidad</th>
+                            <th class="price">Precio Unit.</th>
+                            <th class="total">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="budget-table-body">
+                        <!-- Los datos se llenarán con JavaScript -->
+                    </tbody>
+                </table>
+                
+                <!-- RESUMEN FINAL -->
+                <div class="budget-summary">
+                    <div class="summary-row">
+                        <span>Subtotal materiales:</span>
+                        <span id="subtotal-materiales">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>IVA (21%):</span>
+                        <span id="iva-calculado">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>TOTAL:</span>
+                        <span id="total-presupuesto">$0.00</span>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                    <strong>Nota:</strong> Los precios no incluyen mano de obra. Los cálculos son aproximados.
+                </p>
+            </div>
+        </div>
+        
         <!-- MODO: VALIDAR RECORTE -->
         <div class="card" id="validar-card">
             <h2>✂️ Validar Recorte</h2>
@@ -826,7 +1064,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.4 • Aplicación offline • Sin garantía de exactitud</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.5 • Sistema de presupuestos • Aplicación offline</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -855,7 +1093,17 @@
         // CONFIGURACIÓN Y ESTADO
         const config = {
             rombosPorMetro: 14,
-            margenSeguridad: 15
+            margenSeguridad: 15,
+            extraSogaNudos: 10, // porcentaje extra para nudos
+            distanciaPitones: 30 // distancia en cm entre pitones
+        };
+        
+        // PRECIOS POR DEFECTO
+        const precios = {
+            red: 0.35,     // por rombo
+            piton: 0.80,   // cada pitón
+            soga: 0.25,    // por metro lineal
+            tarugo: 0.10   // cada tarugo
         };
         
         // MENSAJES COMERCIALES (OBLIGATORIOS)
@@ -864,7 +1112,9 @@
             "Se corta con margen para evitar faltantes.",
             "La flexibilidad no reemplaza superficie.",
             "La red es flexible y maniobrable.",
-            "Los rombos se deforman pero NO crean superficie nueva."
+            "Los rombos se deforman pero NO crean superficie nueva.",
+            "Presupuestos calculados en base a precios actuales.",
+            "Cotización válida por 30 días."
         ];
         
         // ELEMENTOS DEL DOM
@@ -874,17 +1124,32 @@
             cards: {
                 metros: document.getElementById('metros-card'),
                 superficie: document.getElementById('superficie-card'),
+                presupuesto: document.getElementById('presupuesto-card'),
                 validar: document.getElementById('validar-card')
             },
             
-            // Inputs
+            // Inputs generales
             metrosInput: document.getElementById('metros-input'),
             anchoInput: document.getElementById('ancho-input'),
             altoInput: document.getElementById('alto-input'),
-            recorteAncho: document.getElementById('recorte-ancho'),
-            recorteAlto: document.getElementById('recorte-alto'),
+            
+            // Inputs presupuesto
+            presAncho: document.getElementById('pres-ancho'),
+            presAlto: document.getElementById('pres-alto'),
+            precioRed: document.getElementById('precio-red'),
+            precioPiton: document.getElementById('precio-piton'),
+            precioSoga: document.getElementById('precio-soga'),
+            precioTarugo: document.getElementById('precio-tarugo'),
+            
+            // Configuración presupuesto
+            extraSogaSlider: document.getElementById('extra-soga'),
+            distanciaPitonesSlider: document.getElementById('distancia-pitones'),
+            extraSogaValue: document.getElementById('extra-soga-value'),
+            distanciaPitonesValue: document.getElementById('distancia-pitones-value'),
             
             // Validación - Inputs por tipo
+            recorteAncho: document.getElementById('recorte-ancho'),
+            recorteAlto: document.getElementById('recorte-alto'),
             objetivoSuperficie: document.getElementById('objetivo-superficie'),
             objetivoAncho: document.getElementById('objetivo-ancho'),
             objetivoAlto: document.getElementById('objetivo-alto'),
@@ -897,14 +1162,23 @@
             // Botones
             calcularMetrosBtn: document.getElementById('calcular-metros'),
             calcularSuperficieBtn: document.getElementById('calcular-superficie'),
+            calcularPresupuestoBtn: document.getElementById('calcular-presupuesto'),
+            guardarPreciosBtn: document.getElementById('guardar-precios'),
             validarRecorteBtn: document.getElementById('validar-recorre'),
             
             // Resultados
             metrosResult: document.getElementById('metros-result'),
             superficieResult: document.getElementById('superficie-result'),
+            presupuestoResult: document.getElementById('presupuesto-result'),
             validarResult: document.getElementById('validar-result'),
             
-            // Configuración
+            // Tabla de presupuesto
+            budgetTableBody: document.getElementById('budget-table-body'),
+            subtotalMateriales: document.getElementById('subtotal-materiales'),
+            ivaCalculado: document.getElementById('iva-calculado'),
+            totalPresupuesto: document.getElementById('total-presupuesto'),
+            
+            // Configuración general
             rombosPorMetroSlider: document.getElementById('rombos-por-metro'),
             margenSeguridadSlider: document.getElementById('margen-seguridad'),
             rombosPorMetroValue: document.getElementById('rombos-por-metro-value'),
@@ -925,6 +1199,9 @@
         function init() {
             // Cargar configuración guardada
             cargarConfiguracion();
+            
+            // Cargar precios guardados
+            cargarPrecios();
             
             // Configurar eventos de navegación
             configurarNavegacion();
@@ -955,18 +1232,56 @@
                 const parsedConfig = JSON.parse(savedConfig);
                 config.rombosPorMetro = parsedConfig.rombosPorMetro || 14;
                 config.margenSeguridad = parsedConfig.margenSeguridad || 15;
+                config.extraSogaNudos = parsedConfig.extraSogaNudos || 10;
+                config.distanciaPitones = parsedConfig.distanciaPitones || 30;
                 
                 // Actualizar controles
                 elementos.rombosPorMetroSlider.value = config.rombosPorMetro;
                 elementos.margenSeguridadSlider.value = config.margenSeguridad;
+                elementos.extraSogaSlider.value = config.extraSogaNudos;
+                elementos.distanciaPitonesSlider.value = config.distanciaPitones;
+                
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
+                elementos.extraSogaValue.textContent = config.extraSogaNudos + '%';
+                elementos.distanciaPitonesValue.textContent = config.distanciaPitones + ' cm';
+            }
+        }
+        
+        // CARGAR PRECIOS GUARDADOS
+        function cargarPrecios() {
+            const savedPrecios = localStorage.getItem('preciosRedesBalconeras');
+            if (savedPrecios) {
+                const parsedPrecios = JSON.parse(savedPrecios);
+                precios.red = parsedPrecios.red || 0.35;
+                precios.piton = parsedPrecios.piton || 0.80;
+                precios.soga = parsedPrecios.soga || 0.25;
+                precios.tarugo = parsedPrecios.tarugo || 0.10;
+                
+                // Actualizar controles
+                elementos.precioRed.value = precios.red;
+                elementos.precioPiton.value = precios.piton;
+                elementos.precioSoga.value = precios.soga;
+                elementos.precioTarugo.value = precios.tarugo;
             }
         }
         
         // GUARDAR CONFIGURACIÓN
         function guardarConfiguracion() {
             localStorage.setItem('configRedesBalconeras', JSON.stringify(config));
+        }
+        
+        // GUARDAR PRECIOS
+        function guardarPrecios() {
+            precios.red = parseFloat(elementos.precioRed.value) || 0.35;
+            precios.piton = parseFloat(elementos.precioPiton.value) || 0.80;
+            precios.soga = parseFloat(elementos.precioSoga.value) || 0.25;
+            precios.tarugo = parseFloat(elementos.precioTarugo.value) || 0.10;
+            
+            localStorage.setItem('preciosRedesBalconeras', JSON.stringify(precios));
+            
+            // Mostrar confirmación
+            mostrarMensajeTemporal('Precios guardados correctamente', 'success');
         }
         
         // CONFIGURAR NAVEGACIÓN ENTRE MODOS
@@ -989,6 +1304,18 @@
                     // Si estamos en el modo superficie, mostrar el resultado si ya fue calculado
                     if (mode === 'superficie' && elementos.superficieResult.style.display === 'block') {
                         calcularSuperficie();
+                    }
+                    // Si estamos en el modo presupuesto, cargar dimensiones desde superficie si están disponibles
+                    if (mode === 'presupuesto') {
+                        const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
+                        const alto = parseFloat(elementos.altoInput.value) || 1.0;
+                        elementos.presAncho.value = ancho;
+                        elementos.presAlto.value = alto;
+                        
+                        // Recalcular presupuesto si ya fue calculado
+                        if (elementos.presupuestoResult.style.display === 'block') {
+                            calcularPresupuesto();
+                        }
                     }
                     // Si estamos en el modo validar, mostrar el resultado si ya fue calculado
                     if (mode === 'validar' && elementos.validarResult.style.display === 'block') {
@@ -1036,52 +1363,88 @@
             elementos.anchoInput.addEventListener('input', calcularSuperficie);
             elementos.altoInput.addEventListener('input', calcularSuperficie);
             
+            // Modo presupuesto
+            elementos.calcularPresupuestoBtn.addEventListener('click', calcularPresupuesto);
+            elementos.guardarPreciosBtn.addEventListener('click', guardarPrecios);
+            
+            // Eventos para recálculo automático en presupuesto
+            elementos.presAncho.addEventListener('input', calcularPresupuesto);
+            elementos.presAlto.addEventListener('input', calcularPresupuesto);
+            elementos.precioRed.addEventListener('input', calcularPresupuesto);
+            elementos.precioPiton.addEventListener('input', calcularPresupuesto);
+            elementos.precioSoga.addEventListener('input', calcularPresupuesto);
+            elementos.precioTarugo.addEventListener('input', calcularPresupuesto);
+            
             // Modo validar recorte
             elementos.validarRecorteBtn.addEventListener('click', validarRecorte);
             elementos.recorteAncho.addEventListener('input', validarRecorte);
             elementos.recorteAlto.addEventListener('input', validarRecorte);
-            
-            // Inputs de validación por superficie
             elementos.objetivoSuperficie.addEventListener('input', validarRecorte);
-            
-            // Inputs de validación por dimensiones
             elementos.objetivoAncho.addEventListener('input', validarRecorte);
             elementos.objetivoAlto.addEventListener('input', validarRecorte);
         }
         
         // CONFIGURAR SLIDERS DE CONFIGURACIÓN
         function configurarSliders() {
+            // Slider rombos por metro
             elementos.rombosPorMetroSlider.addEventListener('input', function() {
                 config.rombosPorMetro = parseInt(this.value);
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
                 guardarConfiguracion();
                 
                 // Recalcular todos los modos si están visibles
-                if (elementos.metrosResult.style.display === 'block') {
-                    calcularMetros();
-                }
-                if (elementos.superficieResult.style.display === 'block') {
-                    calcularSuperficie();
-                }
-                if (elementos.validarResult.style.display === 'block') {
-                    validarRecorte();
-                }
+                recalcularModosActivos();
             });
             
+            // Slider margen de seguridad
             elementos.margenSeguridadSlider.addEventListener('input', function() {
                 config.margenSeguridad = parseInt(this.value);
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
                 guardarConfiguracion();
                 
-                // Recalcular modo metros si el resultado está visible
-                if (elementos.metrosResult.style.display === 'block') {
-                    calcularMetros();
-                }
-                // Recalcular modo superficie si el resultado está visible
-                if (elementos.superficieResult.style.display === 'block') {
-                    calcularSuperficie();
+                // Recalcular todos los modos si están visibles
+                recalcularModosActivos();
+            });
+            
+            // Slider extra soga para nudos
+            elementos.extraSogaSlider.addEventListener('input', function() {
+                config.extraSogaNudos = parseInt(this.value);
+                elementos.extraSogaValue.textContent = config.extraSogaNudos + '%';
+                guardarConfiguracion();
+                
+                // Recalcular presupuesto si está activo
+                if (elementos.presupuestoResult.style.display === 'block') {
+                    calcularPresupuesto();
                 }
             });
+            
+            // Slider distancia entre pitones
+            elementos.distanciaPitonesSlider.addEventListener('input', function() {
+                config.distanciaPitones = parseInt(this.value);
+                elementos.distanciaPitonesValue.textContent = config.distanciaPitones + ' cm';
+                guardarConfiguracion();
+                
+                // Recalcular presupuesto si está activo
+                if (elementos.presupuestoResult.style.display === 'block') {
+                    calcularPresupuesto();
+                }
+            });
+        }
+        
+        // RECALCULAR TODOS LOS MODOS ACTIVOS
+        function recalcularModosActivos() {
+            if (elementos.metrosResult.style.display === 'block') {
+                calcularMetros();
+            }
+            if (elementos.superficieResult.style.display === 'block') {
+                calcularSuperficie();
+            }
+            if (elementos.presupuestoResult.style.display === 'block') {
+                calcularPresupuesto();
+            }
+            if (elementos.validarResult.style.display === 'block') {
+                validarRecorte();
+            }
         }
         
         // MOSTRAR MENSAJE COMERCIAL ALEATORIO
@@ -1094,6 +1457,29 @@
                 const nuevoIndice = Math.floor(Math.random() * mensajesComerciales.length);
                 elementos.commercialMessage.textContent = mensajesComerciales[nuevoIndice];
             }, 30000);
+        }
+        
+        // MOSTRAR MENSAJE TEMPORAL
+        function mostrarMensajeTemporal(mensaje, tipo = 'info') {
+            const mensajeDiv = document.createElement('div');
+            mensajeDiv.className = `result result-${tipo === 'success' ? 'success' : tipo === 'warning' ? 'warning' : 'danger'}`;
+            mensajeDiv.style.position = 'fixed';
+            mensajeDiv.style.top = '20%';
+            mensajeDiv.style.left = '50%';
+            mensajeDiv.style.transform = 'translateX(-50%)';
+            mensajeDiv.style.zIndex = '1002';
+            mensajeDiv.style.maxWidth = '90%';
+            mensajeDiv.style.textAlign = 'center';
+            mensajeDiv.style.padding = '1rem';
+            mensajeDiv.innerHTML = `<p style="margin:0;">${mensaje}</p>`;
+            document.body.appendChild(mensajeDiv);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                mensajeDiv.style.opacity = '0';
+                mensajeDiv.style.transition = 'opacity 0.5s';
+                setTimeout(() => document.body.removeChild(mensajeDiv), 500);
+            }, 3000);
         }
         
         // CÁLCULO MODO METROS LINEALES
@@ -1132,10 +1518,7 @@
             const totalBase = rombosAnchoBase * rombosAltoBase;
             
             // Calcular factor de aumento para distribuir el margen
-            // Para distribuir el margen entre ancho y alto, calculamos el factor de aumento
             const factorMargen = 1 + (config.margenSeguridad / 100);
-            
-            // Aplicar el margen proporcionalmente (raíz cuadrada para distribuir en dos dimensiones)
             const factorPorDimension = Math.sqrt(factorMargen);
             
             // Calcular rombos con margen distribuido
@@ -1182,6 +1565,100 @@
             }
         }
         
+        // CÁLCULO MODO PRESUPUESTO
+        function calcularPresupuesto() {
+            const ancho = parseFloat(elementos.presAncho.value) || 2.0;
+            const alto = parseFloat(elementos.presAlto.value) || 1.5;
+            
+            // Calcular perímetro
+            const perimetro = 2 * (ancho + alto); // en metros
+            
+            // 1. Calcular cantidad de rombos (igual que en superficie)
+            const rombosAnchoBase = Math.ceil(ancho * config.rombosPorMetro);
+            const rombosAltoBase = Math.ceil(alto * config.rombosPorMetro);
+            const factorMargen = 1 + (config.margenSeguridad / 100);
+            const factorPorDimension = Math.sqrt(factorMargen);
+            const rombosAnchoMargen = Math.ceil(rombosAnchoBase * factorPorDimension);
+            const rombosAltoMargen = Math.ceil(rombosAltoBase * factorPorDimension);
+            const totalRombos = rombosAnchoMargen * rombosAltoMargen;
+            
+            // 2. Calcular pitones (cada X cm)
+            const distanciaPitonesMetros = config.distanciaPitones / 100; // convertir a metros
+            const pitones = Math.ceil(perimetro / distanciaPitonesMetros);
+            
+            // 3. Calcular soga (perímetro + extra para nudos)
+            const extraSoga = 1 + (config.extraSogaNudos / 100);
+            const metrosSoga = perimetro * extraSoga;
+            
+            // 4. Tarugos (misma cantidad que pitones)
+            const tarugos = pitones;
+            
+            // Obtener precios actuales
+            const precioRed = parseFloat(elementos.precioRed.value) || precios.red;
+            const precioPiton = parseFloat(elementos.precioPiton.value) || precios.piton;
+            const precioSoga = parseFloat(elementos.precioSoga.value) || precios.soga;
+            const precioTarugo = parseFloat(elementos.precioTarugo.value) || precios.tarugo;
+            
+            // Calcular subtotales
+            const subtotalRed = totalRombos * precioRed;
+            const subtotalPitones = pitones * precioPiton;
+            const subtotalSoga = metrosSoga * precioSoga;
+            const subtotalTarugos = tarugos * precioTarugo;
+            
+            // Calcular totales
+            const subtotalMateriales = subtotalRed + subtotalPitones + subtotalSoga + subtotalTarugos;
+            const iva = subtotalMateriales * 0.21; // 21% IVA
+            const total = subtotalMateriales + iva;
+            
+            // Mostrar resultados
+            elementos.presupuestoResult.style.display = 'block';
+            
+            // Limpiar tabla
+            elementos.budgetTableBody.innerHTML = '';
+            
+            // Agregar filas a la tabla
+            const materiales = [
+                { nombre: 'Red balconera', cantidad: totalRombos, unidad: 'rombos', precio: precioRed, subtotal: subtotalRed },
+                { nombre: 'Pitones', cantidad: pitones, unidad: 'unidades', precio: precioPiton, subtotal: subtotalPitones },
+                { nombre: 'Soga (con ' + config.extraSogaNudos + '% extra para nudos)', cantidad: metrosSoga.toFixed(1), unidad: 'metros', precio: precioSoga, subtotal: subtotalSoga },
+                { nombre: 'Tarugos', cantidad: tarugos, unidad: 'unidades', precio: precioTarugo, subtotal: subtotalTarugos }
+            ];
+            
+            materiales.forEach(material => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${material.nombre}</td>
+                    <td class="quantity">${material.cantidad} ${material.unidad}</td>
+                    <td class="price">$${material.precio.toFixed(2)}</td>
+                    <td class="total">$${material.subtotal.toFixed(2)}</td>
+                `;
+                elementos.budgetTableBody.appendChild(row);
+            });
+            
+            // Agregar fila de total
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td colspan="3"><strong>SUBTOTAL MATERIALES</strong></td>
+                <td class="total"><strong>$${subtotalMateriales.toFixed(2)}</strong></td>
+            `;
+            elementos.budgetTableBody.appendChild(totalRow);
+            
+            // Actualizar resumen
+            elementos.subtotalMateriales.textContent = `$${subtotalMateriales.toFixed(2)}`;
+            elementos.ivaCalculado.textContent = `$${iva.toFixed(2)}`;
+            elementos.totalPresupuesto.textContent = `$${total.toFixed(2)}`;
+            
+            // Establecer color según total
+            if (total < 100) {
+                elementos.presupuestoResult.className = 'result result-success';
+            } else if (total < 300) {
+                elementos.presupuestoResult.className = 'result result-warning';
+            } else {
+                elementos.presupuestoResult.className = 'result result-danger';
+            }
+        }
+        
         // VALIDACIÓN DE RECORTE (MODO CRÍTICO)
         function validarRecorte() {
             const recorteAncho = parseInt(elementos.recorteAncho.value) || 10;
@@ -1193,30 +1670,24 @@
             let objetivo, superficieObjetivo, rombosObjetivo;
             
             if (tipoActivo === 'superficie') {
-                // Modo superficie directa (m²)
                 objetivo = parseFloat(elementos.objetivoSuperficie.value) || 1.0;
                 superficieObjetivo = objetivo;
                 
-                // Cálculo de rombos necesarios para la superficie objetivo
                 const ladoMetros = Math.sqrt(superficieObjetivo);
                 const rombosPorLado = Math.ceil(ladoMetros * config.rombosPorMetro);
                 rombosObjetivo = rombosPorLado * rombosPorLado;
                 
-                // Mostrar valor objetivo
                 document.getElementById('objetivo-valor').textContent = objetivo.toFixed(1) + ' m²';
             } else {
-                // Modo dimensiones (ancho x alto en metros)
                 const objetivoAncho = parseFloat(elementos.objetivoAncho.value) || 1.0;
                 const objetivoAlto = parseFloat(elementos.objetivoAlto.value) || 1.0;
                 superficieObjetivo = objetivoAncho * objetivoAlto;
                 objetivo = superficieObjetivo;
                 
-                // Calcular rombos necesarios para cada dimensión
                 const rombosAncho = Math.ceil(objetivoAncho * config.rombosPorMetro);
                 const rombosAlto = Math.ceil(objetivoAlto * config.rombosPorMetro);
                 rombosObjetivo = rombosAncho * rombosAlto;
                 
-                // Mostrar valor objetivo
                 document.getElementById('objetivo-valor').textContent = objetivoAncho.toFixed(1) + 'm × ' + objetivoAlto.toFixed(1) + 'm';
             }
             
@@ -1247,13 +1718,11 @@
         
         // CONFIGURACIÓN PWA MEJORADA
         function configurarPWA() {
-            // Registrar Service Worker
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('service-worker.js')
                         .then(registration => {
                             console.log('ServiceWorker registrado con éxito:', registration.scope);
-                            // Verificar si ya está instalado
                             verificarSiYaInstalado();
                         })
                         .catch(error => {
@@ -1262,39 +1731,30 @@
                 });
             }
             
-            // Variables para instalación
             let deferredPrompt;
             let installTooltipShown = localStorage.getItem('installTooltipShown') === 'true';
             
-            // Mostrar tooltip de recomendación (una vez por sesión)
             function mostrarRecomendacionInstalacion() {
-                // Solo mostrar si no se ha mostrado antes en esta sesión
-                // y si la app no está ya instalada
                 if (!installTooltipShown && !window.matchMedia('(display-mode: standalone)').matches) {
                     setTimeout(() => {
                         elementos.installTooltip.style.display = 'block';
-                        // Animar el botón de instalación
                         elementos.installButton.classList.add('pulse');
                         
-                        // Marcar como mostrado por 7 días
                         localStorage.setItem('installTooltipShown', 'true');
                         const expiration = new Date();
                         expiration.setDate(expiration.getDate() + 7);
                         localStorage.setItem('installTooltipExpiration', expiration.toISOString());
-                    }, 5000); // Mostrar después de 5 segundos de uso
+                    }, 5000);
                 }
             }
             
-            // Verificar si la app ya está instalada
             function verificarSiYaInstalado() {
-                // Verificar si ya está en modo standalone
                 if (window.matchMedia('(display-mode: standalone)').matches) {
                     console.log('La app ya está instalada');
                     elementos.installButton.style.display = 'none';
                     return true;
                 }
                 
-                // Verificar si el tooltip expiró
                 const expiration = localStorage.getItem('installTooltipExpiration');
                 if (expiration) {
                     const now = new Date();
@@ -1309,60 +1769,43 @@
                 return false;
             }
             
-            // Detectar si la app se puede instalar
             window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevenir que el navegador muestre el prompt automáticamente
                 e.preventDefault();
                 deferredPrompt = e;
                 
-                // Mostrar botón de instalación
                 elementos.installButton.style.display = 'flex';
-                
-                // Mostrar recomendación después de un tiempo
                 mostrarRecomendacionInstalacion();
                 
-                // Configurar evento del botón flotante
                 elementos.installButton.addEventListener('click', async () => {
                     await solicitarInstalacion();
                 });
                 
-                // Configurar evento del botón en el tooltip
                 elementos.installFromTooltip.addEventListener('click', async () => {
                     elementos.installTooltip.style.display = 'none';
                     await solicitarInstalacion();
                 });
             });
             
-            // Función para solicitar instalación
             async function solicitarInstalacion() {
                 if (!deferredPrompt) return;
                 
-                // Mostrar el prompt de instalación
                 deferredPrompt.prompt();
-                
-                // Esperar a que el usuario responda
                 const { outcome } = await deferredPrompt.userChoice;
                 
                 if (outcome === 'accepted') {
                     console.log('Usuario aceptó instalar la PWA');
-                    // Ocultar tooltip y botón
                     elementos.installTooltip.style.display = 'none';
                     elementos.installButton.style.display = 'none';
-                    
-                    // Mostrar mensaje de confirmación
                     mostrarMensajeConfirmacion();
                 } else {
                     console.log('Usuario rechazó instalar la PWA');
-                    // Ocultar tooltip pero mantener botón
                     elementos.installTooltip.style.display = 'none';
-                    // Quitar animación de pulso
                     elementos.installButton.classList.remove('pulse');
                 }
                 
                 deferredPrompt = null;
             }
             
-            // Mostrar mensaje de confirmación después de instalar
             function mostrarMensajeConfirmacion() {
                 const mensaje = document.createElement('div');
                 mensaje.className = 'result result-success';
@@ -1379,7 +1822,6 @@
                 `;
                 document.body.appendChild(mensaje);
                 
-                // Remover después de 3 segundos
                 setTimeout(() => {
                     mensaje.style.opacity = '0';
                     mensaje.style.transition = 'opacity 0.5s';
@@ -1387,23 +1829,19 @@
                 }, 3000);
             }
             
-            // Ocultar tooltip cuando se hace clic en cerrar
             elementos.closeTooltip.addEventListener('click', () => {
                 elementos.installTooltip.style.display = 'none';
                 elementos.installButton.classList.remove('pulse');
             });
             
-            // Recordar más tarde
             elementos.remindLater.addEventListener('click', () => {
                 elementos.installTooltip.style.display = 'none';
                 elementos.installButton.classList.remove('pulse');
-                // Volver a mostrar en 1 día
                 setTimeout(() => {
                     localStorage.removeItem('installTooltipShown');
                 }, 24 * 60 * 60 * 1000);
             });
             
-            // Ocultar tooltip si se hace clic fuera
             document.addEventListener('click', (e) => {
                 if (elementos.installTooltip.style.display === 'block' &&
                     !elementos.installTooltip.contains(e.target) &&
@@ -1413,7 +1851,6 @@
                 }
             });
             
-            // Ocultar tooltip al desplazar
             let scrollTimer;
             window.addEventListener('scroll', () => {
                 if (elementos.installTooltip.style.display === 'block') {
@@ -1422,7 +1859,6 @@
                 }
             });
             
-            // Ocultar botón cuando la app ya está instalada
             window.addEventListener('appinstalled', () => {
                 elementos.installButton.style.display = 'none';
                 elementos.installTooltip.style.display = 'none';
