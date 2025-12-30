@@ -335,15 +335,15 @@
             margin-top: 2rem;
         }
         
-        /* INSTALACIÓN PWA */
+        /* BOTÓN DE INSTALACIÓN MEJORADO */
         .install-btn {
             position: fixed;
             bottom: 1.5rem;
-            right: 1.5rem;
-            background: #0a5c36;
+            right: 1rem;
+            background: linear-gradient(135deg, #0a5c36 0%, #0e7c47 100%);
             color: white;
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -352,7 +352,146 @@
             box-shadow: 0 4px 12px rgba(10, 92, 54, 0.3);
             cursor: pointer;
             z-index: 1000;
+            border: 2px solid white;
+            transition: all 0.3s ease;
+            opacity: 0.9;
+        }
+
+        .install-btn:hover {
+            transform: scale(1.05);
+            opacity: 1;
+            box-shadow: 0 6px 16px rgba(10, 92, 54, 0.4);
+        }
+
+        .install-btn.pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(10, 92, 54, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(10, 92, 54, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(10, 92, 54, 0);
+            }
+        }
+
+        .install-tooltip {
+            position: fixed;
+            bottom: 7rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            max-width: 250px;
+            font-size: 0.9rem;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .install-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 20px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.85) transparent transparent;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .install-tooltip h4 {
+            margin-bottom: 0.5rem;
+            color: #4caf50;
+            font-size: 1rem;
+        }
+
+        .install-tooltip p {
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .install-tooltip-btn {
+            background: #4caf50;
+            color: white;
             border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .install-tooltip-btn.secondary {
+            background: transparent;
+            border: 1px solid #666;
+        }
+
+        .install-tooltip-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .install-tooltip-close:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Para tablets y desktop, mover el botón */
+        @media (min-width: 768px) {
+            .install-btn {
+                right: 1.5rem;
+                bottom: 2rem;
+            }
+            
+            .install-tooltip {
+                right: 1.5rem;
+                bottom: 8.5rem;
+            }
+        }
+
+        /* Ajustes para pantallas muy pequeñas */
+        @media (max-width: 380px) {
+            .install-btn {
+                width: 50px;
+                height: 50px;
+                bottom: 1rem;
+                right: 1rem;
+            }
+            
+            .install-tooltip {
+                bottom: 6.5rem;
+                right: 1rem;
+                max-width: 220px;
+            }
         }
         
         /* RESPONSIVE */
@@ -576,8 +715,25 @@
         <p style="font-size:0.75rem; margin-top:0.5rem;">v1.0 • Aplicación offline • Sin garantía de exactitud</p>
     </div>
     
-    <!-- BOTÓN INSTALAR PWA -->
-    <button class="install-btn" id="installButton" style="display:none;">⬇️</button>
+    <!-- BOTÓN Y TOOLTIP DE INSTALACIÓN PWA -->
+    <button class="install-btn" id="installButton" style="display:none;" 
+            title="Instalar aplicación para acceso rápido">
+        ⬇️
+    </button>
+
+    <div class="install-tooltip" id="installTooltip">
+        <button class="install-tooltip-close" id="closeTooltip">×</button>
+        <h4>📱 Instalar aplicación</h4>
+        <p>Instala esta herramienta en tu teléfono para:</p>
+        <ul style="margin-left: 1rem; margin-bottom: 0.75rem;">
+            <li>Acceso rápido desde la pantalla principal</li>
+            <li>Trabajar completamente sin internet</li>
+            <li>Carga instantánea</li>
+            <li>Experiencia como app nativa</li>
+        </ul>
+        <button class="install-tooltip-btn" id="installFromTooltip">Instalar ahora</button>
+        <button class="install-tooltip-btn secondary" id="remindLater">Recordar más tarde</button>
+    </div>
     
     <!-- SCRIPTS -->
     <script>
@@ -634,7 +790,11 @@
             commercialMessage: document.getElementById('commercial-message'),
             
             // Instalación PWA
-            installButton: document.getElementById('installButton')
+            installButton: document.getElementById('installButton'),
+            installTooltip: document.getElementById('installTooltip'),
+            installFromTooltip: document.getElementById('installFromTooltip'),
+            closeTooltip: document.getElementById('closeTooltip'),
+            remindLater: document.getElementById('remindLater')
         };
         
         // INICIALIZACIÓN
@@ -659,6 +819,8 @@
             
             // Calcular valores iniciales
             calcularMetros();
+            calcularSuperficie();
+            validarRecorte();
         }
         
         // CARGAR CONFIGURACIÓN GUARDADA
@@ -847,7 +1009,7 @@
             }
         }
         
-        // CONFIGURACIÓN PWA
+        // CONFIGURACIÓN PWA MEJORADA
         function configurarPWA() {
             // Registrar Service Worker
             if ('serviceWorker' in navigator) {
@@ -855,6 +1017,8 @@
                     navigator.serviceWorker.register('service-worker.js')
                         .then(registration => {
                             console.log('ServiceWorker registrado con éxito:', registration.scope);
+                            // Verificar si ya está instalado
+                            verificarSiYaInstalado();
                         })
                         .catch(error => {
                             console.log('Error al registrar ServiceWorker:', error);
@@ -862,9 +1026,54 @@
                 });
             }
             
-            // Detectar si la app se puede instalar
+            // Variables para instalación
             let deferredPrompt;
+            let installTooltipShown = localStorage.getItem('installTooltipShown') === 'true';
             
+            // Mostrar tooltip de recomendación (una vez por sesión)
+            function mostrarRecomendacionInstalacion() {
+                // Solo mostrar si no se ha mostrado antes en esta sesión
+                // y si la app no está ya instalada
+                if (!installTooltipShown && !window.matchMedia('(display-mode: standalone)').matches) {
+                    setTimeout(() => {
+                        elementos.installTooltip.style.display = 'block';
+                        // Animar el botón de instalación
+                        elementos.installButton.classList.add('pulse');
+                        
+                        // Marcar como mostrado por 7 días
+                        localStorage.setItem('installTooltipShown', 'true');
+                        const expiration = new Date();
+                        expiration.setDate(expiration.getDate() + 7);
+                        localStorage.setItem('installTooltipExpiration', expiration.toISOString());
+                    }, 5000); // Mostrar después de 5 segundos de uso
+                }
+            }
+            
+            // Verificar si la app ya está instalada
+            function verificarSiYaInstalado() {
+                // Verificar si ya está en modo standalone
+                if (window.matchMedia('(display-mode: standalone)').matches) {
+                    console.log('La app ya está instalada');
+                    elementos.installButton.style.display = 'none';
+                    return true;
+                }
+                
+                // Verificar si el tooltip expiró
+                const expiration = localStorage.getItem('installTooltipExpiration');
+                if (expiration) {
+                    const now = new Date();
+                    const expDate = new Date(expiration);
+                    if (now > expDate) {
+                        localStorage.removeItem('installTooltipShown');
+                        localStorage.removeItem('installTooltipExpiration');
+                        installTooltipShown = false;
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Detectar si la app se puede instalar
             window.addEventListener('beforeinstallprompt', (e) => {
                 // Prevenir que el navegador muestre el prompt automáticamente
                 e.preventDefault();
@@ -873,28 +1082,114 @@
                 // Mostrar botón de instalación
                 elementos.installButton.style.display = 'flex';
                 
-                // Configurar evento del botón
+                // Mostrar recomendación después de un tiempo
+                mostrarRecomendacionInstalacion();
+                
+                // Configurar evento del botón flotante
                 elementos.installButton.addEventListener('click', async () => {
-                    // Mostrar el prompt de instalación
-                    deferredPrompt.prompt();
-                    
-                    // Esperar a que el usuario responda
-                    const { outcome } = await deferredPrompt.userChoice;
-                    
-                    if (outcome === 'accepted') {
-                        console.log('Usuario aceptó instalar la PWA');
-                        elementos.installButton.style.display = 'none';
-                    } else {
-                        console.log('Usuario rechazó instalar la PWA');
-                    }
-                    
-                    deferredPrompt = null;
+                    await solicitarInstalacion();
+                });
+                
+                // Configurar evento del botón en el tooltip
+                elementos.installFromTooltip.addEventListener('click', async () => {
+                    elementos.installTooltip.style.display = 'none';
+                    await solicitarInstalacion();
                 });
             });
             
-            // Ocultar botón de instalación cuando la app ya está instalada
+            // Función para solicitar instalación
+            async function solicitarInstalacion() {
+                if (!deferredPrompt) return;
+                
+                // Mostrar el prompt de instalación
+                deferredPrompt.prompt();
+                
+                // Esperar a que el usuario responda
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('Usuario aceptó instalar la PWA');
+                    // Ocultar tooltip y botón
+                    elementos.installTooltip.style.display = 'none';
+                    elementos.installButton.style.display = 'none';
+                    
+                    // Mostrar mensaje de confirmación
+                    mostrarMensajeConfirmacion();
+                } else {
+                    console.log('Usuario rechazó instalar la PWA');
+                    // Ocultar tooltip pero mantener botón
+                    elementos.installTooltip.style.display = 'none';
+                    // Quitar animación de pulso
+                    elementos.installButton.classList.remove('pulse');
+                }
+                
+                deferredPrompt = null;
+            }
+            
+            // Mostrar mensaje de confirmación después de instalar
+            function mostrarMensajeConfirmacion() {
+                const mensaje = document.createElement('div');
+                mensaje.className = 'result result-success';
+                mensaje.style.position = 'fixed';
+                mensaje.style.top = '20%';
+                mensaje.style.left = '50%';
+                mensaje.style.transform = 'translateX(-50%)';
+                mensaje.style.zIndex = '1002';
+                mensaje.style.maxWidth = '90%';
+                mensaje.style.textAlign = 'center';
+                mensaje.innerHTML = `
+                    <h3>✅ Aplicación instalada</h3>
+                    <p>Ahora puedes acceder rápidamente desde tu pantalla principal</p>
+                `;
+                document.body.appendChild(mensaje);
+                
+                // Remover después de 3 segundos
+                setTimeout(() => {
+                    mensaje.style.opacity = '0';
+                    mensaje.style.transition = 'opacity 0.5s';
+                    setTimeout(() => document.body.removeChild(mensaje), 500);
+                }, 3000);
+            }
+            
+            // Ocultar tooltip cuando se hace clic en cerrar
+            elementos.closeTooltip.addEventListener('click', () => {
+                elementos.installTooltip.style.display = 'none';
+                elementos.installButton.classList.remove('pulse');
+            });
+            
+            // Recordar más tarde
+            elementos.remindLater.addEventListener('click', () => {
+                elementos.installTooltip.style.display = 'none';
+                elementos.installButton.classList.remove('pulse');
+                // Volver a mostrar en 1 día
+                setTimeout(() => {
+                    localStorage.removeItem('installTooltipShown');
+                }, 24 * 60 * 60 * 1000);
+            });
+            
+            // Ocultar tooltip si se hace clic fuera
+            document.addEventListener('click', (e) => {
+                if (elementos.installTooltip.style.display === 'block' &&
+                    !elementos.installTooltip.contains(e.target) &&
+                    !elementos.installButton.contains(e.target)) {
+                    elementos.installTooltip.style.display = 'none';
+                    elementos.installButton.classList.remove('pulse');
+                }
+            });
+            
+            // Ocultar tooltip al desplazar
+            let scrollTimer;
+            window.addEventListener('scroll', () => {
+                if (elementos.installTooltip.style.display === 'block') {
+                    elementos.installTooltip.style.display = 'none';
+                    elementos.installButton.classList.remove('pulse');
+                }
+            });
+            
+            // Ocultar botón cuando la app ya está instalada
             window.addEventListener('appinstalled', () => {
                 elementos.installButton.style.display = 'none';
+                elementos.installTooltip.style.display = 'none';
                 deferredPrompt = null;
                 console.log('PWA instalada');
             });
@@ -902,6 +1197,14 @@
         
         // INICIALIZAR APLICACIÓN CUANDO EL DOM ESTÉ LISTO
         document.addEventListener('DOMContentLoaded', init);
+        
+        // Verificar si ya está instalado al cargar
+        setTimeout(() => {
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                // Si no está instalado, verificar si podemos mostrar el botón
+                // Esto se manejará en el evento beforeinstallprompt
+            }
+        }, 1000);
     </script>
 </body>
 </html>
