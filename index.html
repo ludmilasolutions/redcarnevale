@@ -252,6 +252,17 @@
             transform: translateY(2px);
         }
         
+        /* BOTONES PEQUEÑOS (PARA PRECIOS) */
+        .btn-small {
+            display: inline-block;
+            width: auto;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-left: 0.5rem;
+        }
+        
         /* CHECKBOX IVA */
         .iva-option {
             display: flex;
@@ -409,12 +420,16 @@
             font-weight: 700;
         }
         
-        /* INPUTS DE PRECIOS */
+        /* INPUTS DE PRECIOS - CON BOTÓN INTEGRADO */
+        .price-inputs-container {
+            margin-bottom: 1.5rem;
+        }
+        
         .price-inputs {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
         
         .price-input {
@@ -422,6 +437,7 @@
             padding: 1rem;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
+            position: relative;
         }
         
         .price-input label {
@@ -446,6 +462,12 @@
             border-color: #0a5c36;
         }
         
+        .price-input-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+        
         /* RESUMEN DE PRESUPUESTO */
         .budget-summary {
             background: #f8f9fa;
@@ -468,6 +490,18 @@
             font-weight: 700;
             color: #0a5c36;
             font-size: 1.3rem;
+        }
+        
+        /* ACCIONES DE RESULTADO */
+        .result-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .result-actions .btn {
+            margin-top: 0;
+            flex: 1;
         }
         
         /* MENSAJES COMERCIALES */
@@ -701,6 +735,10 @@
             .price-inputs {
                 grid-template-columns: repeat(4, 1fr);
             }
+            
+            .result-actions {
+                flex-direction: row;
+            }
         }
 
         /* Ajustes para pantallas muy pequeñas */
@@ -730,6 +768,16 @@
             
             .price-inputs {
                 grid-template-columns: 1fr;
+            }
+            
+            .result-actions {
+                flex-direction: column;
+            }
+            
+            .btn-small {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 0.5rem;
             }
         }
         
@@ -918,8 +966,8 @@
                 </div>
             </div>
             
-            <!-- INPUTS DE PRECIOS -->
-            <div class="input-group">
+            <!-- INPUTS DE PRECIOS CON BOTÓN DE GUARDAR -->
+            <div class="price-inputs-container">
                 <label>Precios unitarios:</label>
                 <div class="price-inputs">
                     <div class="price-input">
@@ -938,6 +986,11 @@
                         <label>Tarugo N6</label>
                         <input type="number" id="precio-tarugo" min="0" step="0.01" value="0.10">
                     </div>
+                </div>
+                
+                <!-- BOTÓN DE GUARDAR PRECIOS AL FINAL DE LOS INPUTS -->
+                <div class="price-input-actions">
+                    <button class="btn-secondary btn-small" id="guardar-precios">💾 Guardar Precios</button>
                 </div>
             </div>
             
@@ -966,8 +1019,6 @@
             </div>
             
             <button class="btn btn-primary" id="calcular-presupuesto">Calcular Presupuesto</button>
-            <button class="btn btn-secondary" id="guardar-precios">Guardar Precios</button>
-            <button class="btn btn-success" id="exportar-pdf">📄 Exportar a PDF</button>
             
             <!-- RESULTADO PRESUPUESTO -->
             <div class="result" id="presupuesto-result" style="display:none;">
@@ -1002,6 +1053,12 @@
                         <span>TOTAL:</span>
                         <span id="total-presupuesto">$0.00</span>
                     </div>
+                </div>
+                
+                <!-- BOTÓN DE EXPORTAR PDF DEBAJO DEL RESUMEN -->
+                <div class="result-actions">
+                    <button class="btn btn-success" id="exportar-pdf">📄 Exportar a PDF</button>
+                    <button class="btn btn-secondary" id="copiar-presupuesto">📋 Copiar Presupuesto</button>
                 </div>
                 
                 <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
@@ -1230,6 +1287,7 @@
             calcularPresupuestoBtn: document.getElementById('calcular-presupuesto'),
             guardarPreciosBtn: document.getElementById('guardar-precios'),
             exportarPDFBtn: document.getElementById('exportar-pdf'),
+            copiarPresupuestoBtn: document.getElementById('copiar-presupuesto'),
             validarRecorteBtn: document.getElementById('validar-recorre'),
             
             // Resultados
@@ -1453,6 +1511,7 @@
             elementos.calcularPresupuestoBtn.addEventListener('click', calcularPresupuesto);
             elementos.guardarPreciosBtn.addEventListener('click', guardarPrecios);
             elementos.exportarPDFBtn.addEventListener('click', exportarPDF);
+            elementos.copiarPresupuestoBtn.addEventListener('click', copiarPresupuesto);
             
             // Eventos para recálculo automático en presupuesto
             elementos.presAncho.addEventListener('input', calcularPresupuesto);
@@ -1799,6 +1858,48 @@
             } else {
                 elementos.presupuestoResult.className = 'result result-danger';
             }
+        }
+        
+        // COPIAR PRESUPUESTO AL PORTAPAPELES
+        function copiarPresupuesto() {
+            if (!datosPresupuesto) {
+                mostrarMensajeTemporal('Primero debe calcular un presupuesto', 'warning');
+                return;
+            }
+            
+            // Crear texto formateado para copiar
+            let textoPresupuesto = `PRESUPUESTO DE REDES BALCONERAS\n`;
+            textoPresupuesto += `Fecha: ${datosPresupuesto.fecha}\n`;
+            textoPresupuesto += `Medidas: ${datosPresupuesto.ancho}m x ${datosPresupuesto.alto}m\n`;
+            textoPresupuesto += `Superficie: ${datosPresupuesto.superficie} m²\n`;
+            textoPresupuesto += `Superficie con margen (${datosPresupuesto.margenSeguridad}%): ${datosPresupuesto.superficieConMargen} m²\n\n`;
+            textoPresupuesto += `MATERIALES:\n`;
+            textoPresupuesto += `─`.repeat(40) + `\n`;
+            
+            datosPresupuesto.materiales.forEach(material => {
+                textoPresupuesto += `${material.nombre}: ${material.cantidad} ${material.unidad} x $${material.precio.toFixed(2)} = $${material.subtotal.toFixed(2)}\n`;
+            });
+            
+            textoPresupuesto += `─`.repeat(40) + `\n`;
+            textoPresupuesto += `Subtotal materiales: $${datosPresupuesto.subtotalMateriales.toFixed(2)}\n`;
+            
+            if (datosPresupuesto.incluirIVA) {
+                textoPresupuesto += `IVA (21%): $${datosPresupuesto.iva.toFixed(2)}\n`;
+            }
+            
+            textoPresupuesto += `TOTAL: $${datosPresupuesto.total.toFixed(2)}\n\n`;
+            textoPresupuesto += `Nota: Los precios no incluyen mano de obra. Cotización válida por 30 días.\n`;
+            textoPresupuesto += `Ferretería Carnevale - Herramienta de cálculo v1.6`;
+            
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(textoPresupuesto)
+                .then(() => {
+                    mostrarMensajeTemporal('Presupuesto copiado al portapapeles', 'success');
+                })
+                .catch(err => {
+                    console.error('Error al copiar: ', err);
+                    mostrarMensajeTemporal('Error al copiar al portapapeles', 'danger');
+                });
         }
         
         // EXPORTAR A PDF
