@@ -262,7 +262,7 @@
         
         .result-values {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
             margin: 1rem 0;
         }
@@ -272,6 +272,13 @@
             padding: 1rem;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .result-value.double {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
         
         .result-value .label {
@@ -284,6 +291,12 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: #0a5c36;
+        }
+        
+        .result-value .sub-value {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.25rem;
         }
         
         /* MENSAJES COMERCIALES */
@@ -507,7 +520,11 @@
             }
             
             .result-values {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .result-value.double {
+                grid-column: span 3;
             }
         }
 
@@ -528,6 +545,12 @@
             
             .result-values {
                 grid-template-columns: 1fr;
+            }
+            
+            .result-value.double {
+                grid-column: span 1;
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
             }
         }
         
@@ -560,13 +583,6 @@
             .selector-btn {
                 padding: 0.6rem;
                 font-size: 0.85rem;
-            }
-        }
-        
-        /* Para pantallas medianas (entre 480px y 768px) */
-        @media (min-width: 480px) and (max-width: 767px) {
-            .result-values {
-                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -656,25 +672,47 @@
                         <div class="label">Superficie</div>
                         <div class="value" id="superficie-valor">1.0 m²</div>
                     </div>
+                    
                     <div class="result-value">
-                        <div class="label">Rombos ancho</div>
-                        <div class="value" id="rombos-ancho">14</div>
+                        <div class="label">Base: Ancho</div>
+                        <div class="value" id="rombos-ancho-base">14</div>
+                        <div class="sub-value">rombos</div>
                     </div>
+                    
                     <div class="result-value">
-                        <div class="label">Rombos alto</div>
-                        <div class="value" id="rombos-alto">14</div>
+                        <div class="label">Base: Alto</div>
+                        <div class="value" id="rombos-alto-base">14</div>
+                        <div class="sub-value">rombos</div>
                     </div>
-                    <div class="result-value">
-                        <div class="label">Rombos base</div>
-                        <div class="value" id="rombos-base-sup">196</div>
+                    
+                    <div class="result-value double">
+                        <div class="result-value">
+                            <div class="label">Margen aplicado</div>
+                            <div class="value" id="margen-aplicado">15%</div>
+                        </div>
+                        <div class="result-value">
+                            <div class="label">Total base</div>
+                            <div class="value" id="total-base">196</div>
+                            <div class="sub-value">rombos</div>
+                        </div>
                     </div>
+                    
                     <div class="result-value">
-                        <div class="label">Margen extra</div>
-                        <div class="value" id="margen-calc-sup">29</div>
+                        <div class="label">Con margen: Ancho</div>
+                        <div class="value" id="rombos-ancho-margen">15</div>
+                        <div class="sub-value">rombos</div>
                     </div>
+                    
                     <div class="result-value">
-                        <div class="label">Total recomendado</div>
-                        <div class="value" id="rombos-total-sup">225</div>
+                        <div class="label">Con margen: Alto</div>
+                        <div class="value" id="rombos-alto-margen">15</div>
+                        <div class="sub-value">rombos</div>
+                    </div>
+                    
+                    <div class="result-value">
+                        <div class="label">Total con margen</div>
+                        <div class="value" id="total-margen">225</div>
+                        <div class="sub-value">rombos</div>
                     </div>
                 </div>
                 <p><strong>La flexibilidad no genera superficie adicional.</strong></p>
@@ -788,7 +826,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.3 • Aplicación offline • Sin garantía de exactitud</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.4 • Aplicación offline • Sin garantía de exactitud</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -1082,28 +1120,57 @@
             }
         }
         
-        // CÁLCULO MODO SUPERFICIE (CON ROMBOS POR ANCHO/ALTO Y MARGEN)
+        // CÁLCULO MODO SUPERFICIE (CON MARGEN DISTRIBUIDO)
         function calcularSuperficie() {
             const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
             const alto = parseFloat(elementos.altoInput.value) || 1.0;
             const superficie = ancho * alto;
             
-            const rombosAncho = Math.ceil(ancho * config.rombosPorMetro);
-            const rombosAlto = Math.ceil(alto * config.rombosPorMetro);
-            const rombosTotales = rombosAncho * rombosAlto;
+            // Calcular rombos base (sin margen)
+            const rombosAnchoBase = Math.ceil(ancho * config.rombosPorMetro);
+            const rombosAltoBase = Math.ceil(alto * config.rombosPorMetro);
+            const totalBase = rombosAnchoBase * rombosAltoBase;
             
-            // Calcular margen de seguridad para superficie
-            const margen = Math.ceil(rombosTotales * (config.margenSeguridad / 100));
-            const totalRecomendado = rombosTotales + margen;
+            // Calcular factor de aumento para distribuir el margen
+            // Para distribuir el margen entre ancho y alto, calculamos el factor de aumento
+            const factorMargen = 1 + (config.margenSeguridad / 100);
+            
+            // Aplicar el margen proporcionalmente (raíz cuadrada para distribuir en dos dimensiones)
+            const factorPorDimension = Math.sqrt(factorMargen);
+            
+            // Calcular rombos con margen distribuido
+            const rombosAnchoMargen = Math.ceil(rombosAnchoBase * factorPorDimension);
+            const rombosAltoMargen = Math.ceil(rombosAltoBase * factorPorDimension);
+            const totalConMargen = rombosAnchoMargen * rombosAltoMargen;
             
             // Mostrar resultados
             elementos.superficieResult.style.display = 'block';
+            
+            // Valores básicos
             document.getElementById('superficie-valor').textContent = superficie.toFixed(2) + ' m²';
-            document.getElementById('rombos-ancho').textContent = rombosAncho;
-            document.getElementById('rombos-alto').textContent = rombosAlto;
-            document.getElementById('rombos-base-sup').textContent = rombosTotales;
-            document.getElementById('margen-calc-sup').textContent = '+' + margen;
-            document.getElementById('rombos-total-sup').textContent = totalRecomendado;
+            document.getElementById('margen-aplicado').textContent = config.margenSeguridad + '%';
+            
+            // Valores base (sin margen)
+            document.getElementById('rombos-ancho-base').textContent = rombosAnchoBase;
+            document.getElementById('rombos-alto-base').textContent = rombosAltoBase;
+            document.getElementById('total-base').textContent = totalBase;
+            
+            // Valores con margen distribuido
+            document.getElementById('rombos-ancho-margen').textContent = rombosAnchoMargen;
+            document.getElementById('rombos-alto-margen').textContent = rombosAltoMargen;
+            document.getElementById('total-margen').textContent = totalConMargen;
+            
+            // Calcular incrementos
+            const incrementoAncho = rombosAnchoMargen - rombosAnchoBase;
+            const incrementoAlto = rombosAltoMargen - rombosAltoBase;
+            
+            // Agregar información de incremento como subvalor si hay margen
+            if (config.margenSeguridad > 0) {
+                document.getElementById('rombos-ancho-margen').innerHTML = 
+                    `${rombosAnchoMargen}<span style="font-size:0.9rem; color:#666;"> (+${incrementoAncho})</span>`;
+                document.getElementById('rombos-alto-margen').innerHTML = 
+                    `${rombosAltoMargen}<span style="font-size:0.9rem; color:#666;"> (+${incrementoAlto})</span>`;
+            }
             
             // Establecer color según superficie
             if (superficie <= 2) {
