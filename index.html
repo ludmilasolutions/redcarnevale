@@ -267,6 +267,12 @@
             margin: 1rem 0;
         }
         
+        @media (min-width: 768px) {
+            .result-values {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
         .result-value {
             background: white;
             padding: 1rem;
@@ -532,10 +538,6 @@
             .card {
                 padding: 2rem;
             }
-            
-            .result-values {
-                grid-template-columns: repeat(4, 1fr);
-            }
         }
         
         @media (max-width: 380px) {
@@ -556,6 +558,10 @@
             .selector-btn {
                 padding: 0.6rem;
                 font-size: 0.85rem;
+            }
+            
+            .result-values {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -646,16 +652,16 @@
                         <div class="value" id="superficie-valor">1.0 m²</div>
                     </div>
                     <div class="result-value">
-                        <div class="label">Rombos ancho</div>
-                        <div class="value" id="rombos-ancho">14</div>
+                        <div class="label">Rombos base</div>
+                        <div class="value" id="rombos-base-sup">196</div>
                     </div>
                     <div class="result-value">
-                        <div class="label">Rombos alto</div>
-                        <div class="value" id="rombos-alto">14</div>
+                        <div class="label">Margen extra</div>
+                        <div class="value" id="margen-calc-sup">29</div>
                     </div>
                     <div class="result-value">
-                        <div class="label">Total rombos</div>
-                        <div class="value" id="rombos-totales">196</div>
+                        <div class="label">Total recomendado</div>
+                        <div class="value" id="rombos-total-sup">225</div>
                     </div>
                 </div>
                 <p><strong>La flexibilidad no genera superficie adicional.</strong></p>
@@ -769,7 +775,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.1 • Aplicación offline • Sin garantía de exactitud</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.2 • Aplicación offline • Sin garantía de exactitud</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -1020,6 +1026,10 @@
                 if (elementos.metrosResult.style.display === 'block') {
                     calcularMetros();
                 }
+                // Recalcular modo superficie si el resultado está visible
+                if (elementos.superficieResult.style.display === 'block') {
+                    calcularSuperficie();
+                }
             });
         }
         
@@ -1059,7 +1069,7 @@
             }
         }
         
-        // CÁLCULO MODO SUPERFICIE
+        // CÁLCULO MODO SUPERFICIE (CON MARGEN)
         function calcularSuperficie() {
             const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
             const alto = parseFloat(elementos.altoInput.value) || 1.0;
@@ -1069,12 +1079,16 @@
             const rombosAlto = Math.ceil(alto * config.rombosPorMetro);
             const rombosTotales = rombosAncho * rombosAlto;
             
+            // Calcular margen de seguridad para superficie
+            const margen = Math.ceil(rombosTotales * (config.margenSeguridad / 100));
+            const totalRecomendado = rombosTotales + margen;
+            
             // Mostrar resultados
             elementos.superficieResult.style.display = 'block';
             document.getElementById('superficie-valor').textContent = superficie.toFixed(2) + ' m²';
-            document.getElementById('rombos-ancho').textContent = rombosAncho;
-            document.getElementById('rombos-alto').textContent = rombosAlto;
-            document.getElementById('rombos-totales').textContent = rombosTotales;
+            document.getElementById('rombos-base-sup').textContent = rombosTotales;
+            document.getElementById('margen-calc-sup').textContent = '+' + margen;
+            document.getElementById('rombos-total-sup').textContent = totalRecomendado;
             
             // Establecer color según superficie
             if (superficie <= 2) {
