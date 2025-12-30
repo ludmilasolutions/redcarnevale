@@ -1,5 +1,5 @@
 // Nombre de la cache y archivos a cachear
-const CACHE_NAME = 'redes-balconeras-v1';
+const CACHE_NAME = 'redes-balconeras-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -14,7 +14,10 @@ self.addEventListener('install', event => {
         console.log('Cache abierta');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
+      .then(() => {
+        // Saltar espera para activar inmediatamente
+        return self.skipWaiting();
+      })
   );
 });
 
@@ -27,16 +30,23 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Eliminando cache antigua:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      // Tomar control de todos los clients
+      return self.clients.claim();
+    })
   );
 });
 
 // Estrategia: Cache First, fallback a network
 self.addEventListener('fetch', event => {
+  // Solo manejar peticiones GET
+  if (event.request.method !== 'GET') return;
+  
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -48,27 +58,37 @@ self.addEventListener('fetch', event => {
         // Clona la request porque es un stream y solo se puede usar una vez
         const fetchRequest = event.request.clone();
         
-        return fetch(fetchRequest).then(response => {
-          // Verifica si la respuesta es válida
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+        return fetch(fetchRequest)
+          .then(response => {
+            // Verifica si la respuesta es válida
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+            
+            // Clona la respuesta para guardarla en cache y devolverla
+            const responseToCache = response.clone();
+            
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+            
             return response;
-          }
-          
-          // Clona la respuesta para guardarla en cache y devolverla
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        });
-      }).catch(() => {
-        // Fallback para cuando no hay conexión y no está en cache
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+          })
+          .catch(() => {
+            // Fallback para cuando no hay conexión
+            // Si es una petición HTML, devolver la página principal
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return caches.match('./index.html');
+            }
+          });
       })
   );
+});
+
+// Manejar mensajes desde la página principal
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
