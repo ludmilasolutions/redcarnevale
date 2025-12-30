@@ -416,13 +416,14 @@
             justify-content: space-between;
             padding: 0.75rem 0;
             border-bottom: 1px solid #eee;
+            font-size: 1.1rem;
         }
         
         .summary-row:last-child {
             border-bottom: none;
             font-weight: 700;
             color: #0a5c36;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
         }
         
         /* MENSAJES COMERCIALES */
@@ -878,8 +879,8 @@
                 <label>Precios unitarios:</label>
                 <div class="price-inputs">
                     <div class="price-input">
-                        <label>Red (por rombo)</label>
-                        <input type="number" id="precio-red" min="0" step="0.01" value="0.35">
+                        <label>Red (por m²)</label>
+                        <input type="number" id="precio-red" min="0" step="0.01" value="4.50">
                     </div>
                     <div class="price-input">
                         <label>Pitón c/30cm</label>
@@ -937,14 +938,6 @@
                 
                 <!-- RESUMEN FINAL -->
                 <div class="budget-summary">
-                    <div class="summary-row">
-                        <span>Subtotal materiales:</span>
-                        <span id="subtotal-materiales">$0.00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>IVA (21%):</span>
-                        <span id="iva-calculado">$0.00</span>
-                    </div>
                     <div class="summary-row">
                         <span>TOTAL:</span>
                         <span id="total-presupuesto">$0.00</span>
@@ -1098,9 +1091,9 @@
             distanciaPitones: 30 // distancia en cm entre pitones
         };
         
-        // PRECIOS POR DEFECTO
+        // PRECIOS POR DEFECTO (RED POR M²)
         const precios = {
-            red: 0.35,     // por rombo
+            red: 4.50,    // por m² (cambio importante)
             piton: 0.80,   // cada pitón
             soga: 0.25,    // por metro lineal
             tarugo: 0.10   // cada tarugo
@@ -1114,7 +1107,9 @@
             "La red es flexible y maniobrable.",
             "Los rombos se deforman pero NO crean superficie nueva.",
             "Presupuestos calculados en base a precios actuales.",
-            "Cotización válida por 30 días."
+            "Cotización válida por 30 días.",
+            "Red vendida por metro cuadrado.",
+            "Todos los precios son sin IVA."
         ];
         
         // ELEMENTOS DEL DOM
@@ -1174,8 +1169,6 @@
             
             // Tabla de presupuesto
             budgetTableBody: document.getElementById('budget-table-body'),
-            subtotalMateriales: document.getElementById('subtotal-materiales'),
-            ivaCalculado: document.getElementById('iva-calculado'),
             totalPresupuesto: document.getElementById('total-presupuesto'),
             
             // Configuración general
@@ -1253,7 +1246,7 @@
             const savedPrecios = localStorage.getItem('preciosRedesBalconeras');
             if (savedPrecios) {
                 const parsedPrecios = JSON.parse(savedPrecios);
-                precios.red = parsedPrecios.red || 0.35;
+                precios.red = parsedPrecios.red || 4.50;
                 precios.piton = parsedPrecios.piton || 0.80;
                 precios.soga = parsedPrecios.soga || 0.25;
                 precios.tarugo = parsedPrecios.tarugo || 0.10;
@@ -1273,7 +1266,7 @@
         
         // GUARDAR PRECIOS
         function guardarPrecios() {
-            precios.red = parseFloat(elementos.precioRed.value) || 0.35;
+            precios.red = parseFloat(elementos.precioRed.value) || 4.50;
             precios.piton = parseFloat(elementos.precioPiton.value) || 0.80;
             precios.soga = parseFloat(elementos.precioSoga.value) || 0.25;
             precios.tarugo = parseFloat(elementos.precioTarugo.value) || 0.10;
@@ -1565,7 +1558,7 @@
             }
         }
         
-        // CÁLCULO MODO PRESUPUESTO
+        // CÁLCULO MODO PRESUPUESTO (RED POR M², SIN IVA)
         function calcularPresupuesto() {
             const ancho = parseFloat(elementos.presAncho.value) || 2.0;
             const alto = parseFloat(elementos.presAlto.value) || 1.5;
@@ -1573,14 +1566,19 @@
             // Calcular perímetro
             const perimetro = 2 * (ancho + alto); // en metros
             
-            // 1. Calcular cantidad de rombos (igual que en superficie)
+            // 1. Calcular superficie con margen para la red
+            // Primero calculamos los rombos con margen
             const rombosAnchoBase = Math.ceil(ancho * config.rombosPorMetro);
             const rombosAltoBase = Math.ceil(alto * config.rombosPorMetro);
             const factorMargen = 1 + (config.margenSeguridad / 100);
             const factorPorDimension = Math.sqrt(factorMargen);
             const rombosAnchoMargen = Math.ceil(rombosAnchoBase * factorPorDimension);
             const rombosAltoMargen = Math.ceil(rombosAltoBase * factorPorDimension);
-            const totalRombos = rombosAnchoMargen * rombosAltoMargen;
+            
+            // Convertir rombos a metros para obtener superficie con margen
+            const anchoConMargen = rombosAnchoMargen / config.rombosPorMetro;
+            const altoConMargen = rombosAltoMargen / config.rombosPorMetro;
+            const superficieConMargen = anchoConMargen * altoConMargen;
             
             // 2. Calcular pitones (cada X cm)
             const distanciaPitonesMetros = config.distanciaPitones / 100; // convertir a metros
@@ -1600,15 +1598,13 @@
             const precioTarugo = parseFloat(elementos.precioTarugo.value) || precios.tarugo;
             
             // Calcular subtotales
-            const subtotalRed = totalRombos * precioRed;
+            const subtotalRed = superficieConMargen * precioRed;
             const subtotalPitones = pitones * precioPiton;
             const subtotalSoga = metrosSoga * precioSoga;
             const subtotalTarugos = tarugos * precioTarugo;
             
-            // Calcular totales
-            const subtotalMateriales = subtotalRed + subtotalPitones + subtotalSoga + subtotalTarugos;
-            const iva = subtotalMateriales * 0.21; // 21% IVA
-            const total = subtotalMateriales + iva;
+            // Calcular total (sin IVA)
+            const total = subtotalRed + subtotalPitones + subtotalSoga + subtotalTarugos;
             
             // Mostrar resultados
             elementos.presupuestoResult.style.display = 'block';
@@ -1618,10 +1614,34 @@
             
             // Agregar filas a la tabla
             const materiales = [
-                { nombre: 'Red balconera', cantidad: totalRombos, unidad: 'rombos', precio: precioRed, subtotal: subtotalRed },
-                { nombre: 'Pitones', cantidad: pitones, unidad: 'unidades', precio: precioPiton, subtotal: subtotalPitones },
-                { nombre: 'Soga (con ' + config.extraSogaNudos + '% extra para nudos)', cantidad: metrosSoga.toFixed(1), unidad: 'metros', precio: precioSoga, subtotal: subtotalSoga },
-                { nombre: 'Tarugos', cantidad: tarugos, unidad: 'unidades', precio: precioTarugo, subtotal: subtotalTarugos }
+                { 
+                    nombre: 'Red balconera (con margen de seguridad)', 
+                    cantidad: superficieConMargen.toFixed(2), 
+                    unidad: 'm²', 
+                    precio: precioRed, 
+                    subtotal: subtotalRed 
+                },
+                { 
+                    nombre: 'Pitones', 
+                    cantidad: pitones, 
+                    unidad: 'unidades', 
+                    precio: precioPiton, 
+                    subtotal: subtotalPitones 
+                },
+                { 
+                    nombre: `Soga (con ${config.extraSogaNudos}% extra para nudos)`, 
+                    cantidad: metrosSoga.toFixed(1), 
+                    unidad: 'metros', 
+                    precio: precioSoga, 
+                    subtotal: subtotalSoga 
+                },
+                { 
+                    nombre: 'Tarugos', 
+                    cantidad: tarugos, 
+                    unidad: 'unidades', 
+                    precio: precioTarugo, 
+                    subtotal: subtotalTarugos 
+                }
             ];
             
             materiales.forEach(material => {
@@ -1639,14 +1659,12 @@
             const totalRow = document.createElement('tr');
             totalRow.className = 'total-row';
             totalRow.innerHTML = `
-                <td colspan="3"><strong>SUBTOTAL MATERIALES</strong></td>
-                <td class="total"><strong>$${subtotalMateriales.toFixed(2)}</strong></td>
+                <td colspan="3"><strong>TOTAL (SIN IVA)</strong></td>
+                <td class="total"><strong>$${total.toFixed(2)}</strong></td>
             `;
             elementos.budgetTableBody.appendChild(totalRow);
             
             // Actualizar resumen
-            elementos.subtotalMateriales.textContent = `$${subtotalMateriales.toFixed(2)}`;
-            elementos.ivaCalculado.textContent = `$${iva.toFixed(2)}`;
             elementos.totalPresupuesto.textContent = `$${total.toFixed(2)}`;
             
             // Establecer color según total
