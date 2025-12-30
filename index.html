@@ -267,12 +267,6 @@
             margin: 1rem 0;
         }
         
-        @media (min-width: 768px) {
-            .result-values {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
         .result-value {
             background: white;
             padding: 1rem;
@@ -511,6 +505,10 @@
                 right: 1.5rem;
                 bottom: 8.5rem;
             }
+            
+            .result-values {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         /* Ajustes para pantallas muy pequeñas */
@@ -526,6 +524,10 @@
                 bottom: 6.5rem;
                 right: 1rem;
                 max-width: 220px;
+            }
+            
+            .result-values {
+                grid-template-columns: 1fr;
             }
         }
         
@@ -559,9 +561,12 @@
                 padding: 0.6rem;
                 font-size: 0.85rem;
             }
-            
+        }
+        
+        /* Para pantallas medianas (entre 480px y 768px) */
+        @media (min-width: 480px) and (max-width: 767px) {
             .result-values {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -650,6 +655,14 @@
                     <div class="result-value">
                         <div class="label">Superficie</div>
                         <div class="value" id="superficie-valor">1.0 m²</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos ancho</div>
+                        <div class="value" id="rombos-ancho">14</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos alto</div>
+                        <div class="value" id="rombos-alto">14</div>
                     </div>
                     <div class="result-value">
                         <div class="label">Rombos base</div>
@@ -775,7 +788,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.2 • Aplicación offline • Sin garantía de exactitud</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.3 • Aplicación offline • Sin garantía de exactitud</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -1069,7 +1082,7 @@
             }
         }
         
-        // CÁLCULO MODO SUPERFICIE (CON MARGEN)
+        // CÁLCULO MODO SUPERFICIE (CON ROMBOS POR ANCHO/ALTO Y MARGEN)
         function calcularSuperficie() {
             const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
             const alto = parseFloat(elementos.altoInput.value) || 1.0;
@@ -1086,6 +1099,8 @@
             // Mostrar resultados
             elementos.superficieResult.style.display = 'block';
             document.getElementById('superficie-valor').textContent = superficie.toFixed(2) + ' m²';
+            document.getElementById('rombos-ancho').textContent = rombosAncho;
+            document.getElementById('rombos-alto').textContent = rombosAlto;
             document.getElementById('rombos-base-sup').textContent = rombosTotales;
             document.getElementById('margen-calc-sup').textContent = '+' + margen;
             document.getElementById('rombos-total-sup').textContent = totalRecomendado;
