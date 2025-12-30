@@ -916,7 +916,7 @@
                     <div class="result-value double">
                         <div class="result-value">
                             <div class="label">Margen aplicado</div>
-                            <div class="value" id="margen-aplicado">15%</div>
+                            <div class="value" id="margen-aplicado">0%</div>
                         </div>
                         <div class="result-value">
                             <div class="label">Total base</div>
@@ -927,19 +927,19 @@
                     
                     <div class="result-value">
                         <div class="label">Con margen: Ancho</div>
-                        <div class="value" id="rombos-ancho-margen">15</div>
+                        <div class="value" id="rombos-ancho-margen">14</div>
                         <div class="sub-value">rombos</div>
                     </div>
                     
                     <div class="result-value">
                         <div class="label">Con margen: Alto</div>
-                        <div class="value" id="rombos-alto-margen">15</div>
+                        <div class="value" id="rombos-alto-margen">14</div>
                         <div class="sub-value">rombos</div>
                     </div>
                     
                     <div class="result-value">
                         <div class="label">Total con margen</div>
-                        <div class="value" id="total-margen">225</div>
+                        <div class="value" id="total-margen">196</div>
                         <div class="sub-value">rombos</div>
                     </div>
                 </div>
@@ -972,19 +972,19 @@
                 <div class="price-inputs">
                     <div class="price-input">
                         <label>Red (por m²)</label>
-                        <input type="number" id="precio-red" min="0" step="0.01" value="4.50">
+                        <input type="number" id="precio-red" min="0" step="0.01" value="5500">
                     </div>
                     <div class="price-input">
                         <label>Pitón N6</label>
-                        <input type="number" id="precio-piton" min="0" step="0.01" value="0.80">
+                        <input type="number" id="precio-piton" min="0" step="0.01" value="250">
                     </div>
                     <div class="price-input">
                         <label>Soga (por metro)</label>
-                        <input type="number" id="precio-soga" min="0" step="0.01" value="0.25">
+                        <input type="number" id="precio-soga" min="0" step="0.01" value="200">
                     </div>
                     <div class="price-input">
                         <label>Tarugo N6</label>
-                        <input type="number" id="precio-tarugo" min="0" step="0.01" value="0.10">
+                        <input type="number" id="precio-tarugo" min="0" step="0.01" value="50">
                     </div>
                 </div>
                 
@@ -1161,8 +1161,8 @@
             
             <div class="slider-container">
                 <label>Margen de seguridad:</label>
-                <input type="range" id="margen-seguridad" min="0" max="30" step="5" value="15">
-                <div class="slider-value" id="margen-seguridad-value">15%</div>
+                <input type="range" id="margen-seguridad" min="0" max="30" step="1" value="0">
+                <div class="slider-value" id="margen-seguridad-value">0%</div>
             </div>
             
             <p style="font-size:0.85rem; color:#666; margin-top:1rem;">
@@ -1203,18 +1203,18 @@
         // CONFIGURACIÓN Y ESTADO
         const config = {
             rombosPorMetro: 14,
-            margenSeguridad: 15,
+            margenSeguridad: 0, // CAMBIO IMPORTANTE: 0% por defecto en lugar de 15%
             extraSogaNudos: 10, // porcentaje extra para nudos
             distanciaPitones: 30, // distancia en cm entre pitones
             incluirIVA: true // IVA opcional, por defecto activado
         };
         
-        // PRECIOS POR DEFECTO (RED POR M²)
+        // PRECIOS POR DEFECTO ACTUALIZADOS (RED POR M²)
         const precios = {
-            red: 4.50,    // por m²
-            piton: 0.80,   // cada pitón N6
-            soga: 0.25,    // por metro lineal
-            tarugo: 0.10   // cada tarugo N6
+            red: 5500,    // por m² - CAMBIO: de 4.50 a 5500
+            piton: 250,   // cada pitón N6 - CAMBIO: de 0.80 a 250
+            soga: 200,    // por metro lineal - CAMBIO: de 0.25 a 200
+            tarugo: 50    // cada tarugo N6 - CAMBIO: de 0.10 a 50
         };
         
         // MENSAJES COMERCIALES (OBLIGATORIOS)
@@ -1228,7 +1228,8 @@
             "Cotización válida por 30 días.",
             "Red vendida por metro cuadrado.",
             "Todos los precios pueden incluir IVA (opcional).",
-            "Pitones y tarugos N6 para instalación profesional."
+            "Pitones y tarugos N6 para instalación profesional.",
+            "Margen de seguridad configurable desde 0%."
         ];
         
         // DATOS PARA PDF
@@ -1352,13 +1353,13 @@
             calcularSuperficie();
         }
         
-        // CARGAR CONFIGURACIÓN GUARDADA
+        // CARGAR CONFIGURACIÓN GUARDADA (CON MEMORIA PARA MARGEN)
         function cargarConfiguracion() {
             const savedConfig = localStorage.getItem('configRedesBalconeras');
             if (savedConfig) {
                 const parsedConfig = JSON.parse(savedConfig);
                 config.rombosPorMetro = parsedConfig.rombosPorMetro || 14;
-                config.margenSeguridad = parsedConfig.margenSeguridad || 15;
+                config.margenSeguridad = parsedConfig.margenSeguridad !== undefined ? parsedConfig.margenSeguridad : 0; // CAMBIO: 0 por defecto
                 config.extraSogaNudos = parsedConfig.extraSogaNudos || 10;
                 config.distanciaPitones = parsedConfig.distanciaPitones || 30;
                 config.incluirIVA = parsedConfig.incluirIVA !== undefined ? parsedConfig.incluirIVA : true;
@@ -1371,10 +1372,14 @@
                 elementos.incluirIVACheckbox.checked = config.incluirIVA;
                 
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
-                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
+                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%'; // Mostrar el valor guardado
                 elementos.extraSogaValue.textContent = config.extraSogaNudos + '%';
                 elementos.distanciaPitonesValue.textContent = config.distanciaPitones + ' cm';
                 elementos.ivaInfo.textContent = config.incluirIVA ? 'IVA incluido' : 'Sin IVA';
+            } else {
+                // Si no hay configuración guardada, usar valores por defecto
+                elementos.margenSeguridadSlider.value = 0;
+                elementos.margenSeguridadValue.textContent = '0%';
             }
         }
         
@@ -1383,10 +1388,10 @@
             const savedPrecios = localStorage.getItem('preciosRedesBalconeras');
             if (savedPrecios) {
                 const parsedPrecios = JSON.parse(savedPrecios);
-                precios.red = parsedPrecios.red || 4.50;
-                precios.piton = parsedPrecios.piton || 0.80;
-                precios.soga = parsedPrecios.soga || 0.25;
-                precios.tarugo = parsedPrecios.tarugo || 0.10;
+                precios.red = parsedPrecios.red || 5500;
+                precios.piton = parsedPrecios.piton || 250;
+                precios.soga = parsedPrecios.soga || 200;
+                precios.tarugo = parsedPrecios.tarugo || 50;
                 
                 // Actualizar controles
                 elementos.precioRed.value = precios.red;
@@ -1396,17 +1401,17 @@
             }
         }
         
-        // GUARDAR CONFIGURACIÓN
+        // GUARDAR CONFIGURACIÓN (INCLUYE MARGEN)
         function guardarConfiguracion() {
             localStorage.setItem('configRedesBalconeras', JSON.stringify(config));
         }
         
         // GUARDAR PRECIOS
         function guardarPrecios() {
-            precios.red = parseFloat(elementos.precioRed.value) || 4.50;
-            precios.piton = parseFloat(elementos.precioPiton.value) || 0.80;
-            precios.soga = parseFloat(elementos.precioSoga.value) || 0.25;
-            precios.tarugo = parseFloat(elementos.precioTarugo.value) || 0.10;
+            precios.red = parseFloat(elementos.precioRed.value) || 5500;
+            precios.piton = parseFloat(elementos.precioPiton.value) || 250;
+            precios.soga = parseFloat(elementos.precioSoga.value) || 200;
+            precios.tarugo = parseFloat(elementos.precioTarugo.value) || 50;
             
             localStorage.setItem('preciosRedesBalconeras', JSON.stringify(precios));
             
@@ -1531,7 +1536,7 @@
             elementos.objetivoAlto.addEventListener('input', validarRecorte);
         }
         
-        // CONFIGURAR SLIDERS DE CONFIGURACIÓN
+        // CONFIGURAR SLIDERS DE CONFIGURACIÓN (CON MEMORIA PARA MARGEN)
         function configurarSliders() {
             // Slider rombos por metro
             elementos.rombosPorMetroSlider.addEventListener('input', function() {
@@ -1543,11 +1548,11 @@
                 recalcularModosActivos();
             });
             
-            // Slider margen de seguridad
+            // Slider margen de seguridad - CON MEMORIA
             elementos.margenSeguridadSlider.addEventListener('input', function() {
                 config.margenSeguridad = parseInt(this.value);
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
-                guardarConfiguracion();
+                guardarConfiguracion(); // GUARDA EL VALOR EN LOCALSTORAGE
                 
                 // Recalcular todos los modos si están visibles
                 recalcularModosActivos();
@@ -1644,9 +1649,9 @@
             document.getElementById('rombos-total').textContent = totalRecomendado;
             
             // Establecer color según margen
-            if (config.margenSeguridad >= 15) {
+            if (config.margenSeguridad === 0) {
                 elementos.metrosResult.className = 'result result-success';
-            } else if (config.margenSeguridad >= 10) {
+            } else if (config.margenSeguridad <= 10) {
                 elementos.metrosResult.className = 'result result-warning';
             } else {
                 elementos.metrosResult.className = 'result result-danger';
@@ -1851,9 +1856,9 @@
             };
             
             // Establecer color según total
-            if (total < 100) {
+            if (total < 10000) {
                 elementos.presupuestoResult.className = 'result result-success';
-            } else if (total < 300) {
+            } else if (total < 50000) {
                 elementos.presupuestoResult.className = 'result result-warning';
             } else {
                 elementos.presupuestoResult.className = 'result result-danger';
@@ -1983,6 +1988,7 @@
                 doc.text('• Cotización válida por 30 días a partir de la fecha de emisión.', margin, finalY + 18);
                 doc.text('• Red vendida por metro cuadrado.', margin, finalY + 24);
                 doc.text(`• ${datosPresupuesto.incluirIVA ? 'IVA incluido' : 'Sin IVA'} en los precios.`, margin, finalY + 30);
+                doc.text(`• Margen de seguridad aplicado: ${datosPresupuesto.margenSeguridad}%`, margin, finalY + 36);
                 
                 // Pie de página
                 doc.setFontSize(8);
