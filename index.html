@@ -127,10 +127,6 @@
             gap: 0.5rem;
         }
         
-        .card h2::before {
-            font-size: 1.2rem;
-        }
-        
         /* FORMULARIOS */
         .input-group {
             margin-bottom: 1.5rem;
@@ -177,6 +173,33 @@
             transform: translateY(-50%);
             color: #666;
             font-weight: 500;
+        }
+        
+        /* SELECTOR DE MODO EN VALIDACIÓN */
+        .selector-modos {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        
+        .selector-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .selector-btn.active {
+            color: #0a5c36;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         /* BOTONES */
@@ -333,6 +356,12 @@
             font-size: 0.85rem;
             border-top: 1px solid #eee;
             margin-top: 2rem;
+        }
+        
+        .credits {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #888;
         }
         
         /* BOTÓN DE INSTALACIÓN MEJORADO */
@@ -523,6 +552,11 @@
                 flex-direction: column;
                 gap: 0.75rem;
             }
+            
+            .selector-btn {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -537,13 +571,13 @@
     <div class="container">
         <!-- SELECTOR DE MODO -->
         <div class="modes">
-            <button class="mode-btn active" data-mode="metros">Metros Lineales</button>
-            <button class="mode-btn" data-mode="superficie">Superficie (m²)</button>
+            <button class="mode-btn" data-mode="metros">Metros Lineales</button>
+            <button class="mode-btn active" data-mode="superficie">Superficie (m²)</button>
             <button class="mode-btn" data-mode="validar">Validar Recorte</button>
         </div>
         
         <!-- MODO: METROS LINEALES -->
-        <div class="card active" id="metros-card">
+        <div class="card" id="metros-card">
             <h2>📏 Metros Lineales</h2>
             <p>Calcula los rombos necesarios para un largo específico</p>
             
@@ -583,7 +617,7 @@
         </div>
         
         <!-- MODO: SUPERFICIE -->
-        <div class="card" id="superficie-card">
+        <div class="card active" id="superficie-card">
             <h2>📐 Superficie (m²)</h2>
             <p>Calcula rombos necesarios para cubrir un área rectangular</p>
             
@@ -633,6 +667,13 @@
             <h2>✂️ Validar Recorte</h2>
             <p>Verifica si un recorte existente cubre una superficie objetivo</p>
             
+            <!-- Selector de modo de entrada -->
+            <div class="selector-modos">
+                <button class="selector-btn active" data-tipo="superficie">Por m²</button>
+                <button class="selector-btn" data-tipo="dimensiones">Por Metros</button>
+            </div>
+            
+            <!-- Inputs para Dimensiones del recorte (siempre visible) -->
             <div class="input-group">
                 <label>Dimensiones del recorte (en rombos):</label>
                 <div class="input-row">
@@ -647,11 +688,27 @@
                 </div>
             </div>
             
-            <div class="input-group">
+            <!-- Input por Superficie (m²) - Inicialmente visible -->
+            <div class="input-group" id="input-superficie">
                 <label>Superficie objetivo a cubrir:</label>
                 <div class="input-field">
                     <input type="number" id="objetivo-superficie" min="0.1" step="0.1" value="1.0">
                     <span>m²</span>
+                </div>
+            </div>
+            
+            <!-- Inputs por Dimensiones (metros) - Inicialmente oculto -->
+            <div class="input-group" id="input-dimensiones" style="display:none;">
+                <label>Dimensiones objetivo a cubrir:</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="objetivo-ancho" min="0.1" step="0.1" value="1.0" placeholder="Ancho">
+                        <span>m</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="objetivo-alto" min="0.1" step="0.1" value="1.0" placeholder="Alto">
+                        <span>m</span>
+                    </div>
                 </div>
             </div>
             
@@ -712,7 +769,8 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.0 • Aplicación offline • Sin garantía de exactitud</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.1 • Aplicación offline • Sin garantía de exactitud</p>
+        <p class="credits">creado por sebastian mascali</p>
     </div>
     
     <!-- BOTÓN Y TOOLTIP DE INSTALACIÓN PWA -->
@@ -768,7 +826,16 @@
             altoInput: document.getElementById('alto-input'),
             recorteAncho: document.getElementById('recorte-ancho'),
             recorteAlto: document.getElementById('recorte-alto'),
+            
+            // Validación - Inputs por tipo
             objetivoSuperficie: document.getElementById('objetivo-superficie'),
+            objetivoAncho: document.getElementById('objetivo-ancho'),
+            objetivoAlto: document.getElementById('objetivo-alto'),
+            
+            // Selector de tipo en validación
+            selectorBtns: document.querySelectorAll('.selector-btn'),
+            inputSuperficie: document.getElementById('input-superficie'),
+            inputDimensiones: document.getElementById('input-dimensiones'),
             
             // Botones
             calcularMetrosBtn: document.getElementById('calcular-metros'),
@@ -811,16 +878,17 @@
             // Configurar sliders de configuración
             configurarSliders();
             
+            // Configurar selector de tipo en validación
+            configurarSelectorValidacion();
+            
             // Mostrar mensaje comercial aleatorio
             mostrarMensajeComercialAleatorio();
             
             // Configurar PWA
             configurarPWA();
             
-            // Calcular valores iniciales
-            calcularMetros();
+            // Calcular valores iniciales en superficie (modo activo por defecto)
             calcularSuperficie();
-            validarRecorte();
         }
         
         // CARGAR CONFIGURACIÓN GUARDADA
@@ -865,6 +933,33 @@
             });
         }
         
+        // CONFIGURAR SELECTOR DE TIPO EN VALIDACIÓN
+        function configurarSelectorValidacion() {
+            elementos.selectorBtns.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover clase active de todos los botones
+                    elementos.selectorBtns.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Activar el botón seleccionado
+                    this.classList.add('active');
+                    
+                    // Mostrar/ocultar inputs según tipo
+                    const tipo = this.getAttribute('data-tipo');
+                    
+                    if (tipo === 'superficie') {
+                        elementos.inputSuperficie.style.display = 'block';
+                        elementos.inputDimensiones.style.display = 'none';
+                    } else {
+                        elementos.inputSuperficie.style.display = 'none';
+                        elementos.inputDimensiones.style.display = 'block';
+                    }
+                    
+                    // Recalcular validación
+                    validarRecorte();
+                });
+            });
+        }
+        
         // CONFIGURAR EVENTOS DE CÁLCULO
         function configurarEventosCalculo() {
             // Modo metros lineales
@@ -880,7 +975,13 @@
             elementos.validarRecorteBtn.addEventListener('click', validarRecorte);
             elementos.recorteAncho.addEventListener('input', validarRecorte);
             elementos.recorteAlto.addEventListener('input', validarRecorte);
+            
+            // Inputs de validación por superficie
             elementos.objetivoSuperficie.addEventListener('input', validarRecorte);
+            
+            // Inputs de validación por dimensiones
+            elementos.objetivoAncho.addEventListener('input', validarRecorte);
+            elementos.objetivoAlto.addEventListener('input', validarRecorte);
         }
         
         // CONFIGURAR SLIDERS DE CONFIGURACIÓN
@@ -973,15 +1074,39 @@
         function validarRecorte() {
             const recorteAncho = parseInt(elementos.recorteAncho.value) || 10;
             const recorteAlto = parseInt(elementos.recorteAlto.value) || 18;
-            const objetivo = parseFloat(elementos.objetivoSuperficie.value) || 1.0;
-            
             const superficieRecorte = recorteAncho * recorteAlto;
             
-            // Cálculo de rombos necesarios para la superficie objetivo
-            // Para una superficie cuadrada aproximada: lado = √superficie
-            const ladoMetros = Math.sqrt(objetivo);
-            const rombosPorLado = Math.ceil(ladoMetros * config.rombosPorMetro);
-            const rombosObjetivo = rombosPorLado * rombosPorLado;
+            // Determinar qué tipo de entrada se está usando
+            const tipoActivo = document.querySelector('.selector-btn.active').getAttribute('data-tipo');
+            let objetivo, superficieObjetivo, rombosObjetivo;
+            
+            if (tipoActivo === 'superficie') {
+                // Modo superficie directa (m²)
+                objetivo = parseFloat(elementos.objetivoSuperficie.value) || 1.0;
+                superficieObjetivo = objetivo;
+                
+                // Cálculo de rombos necesarios para la superficie objetivo
+                const ladoMetros = Math.sqrt(superficieObjetivo);
+                const rombosPorLado = Math.ceil(ladoMetros * config.rombosPorMetro);
+                rombosObjetivo = rombosPorLado * rombosPorLado;
+                
+                // Mostrar valor objetivo
+                document.getElementById('objetivo-valor').textContent = objetivo.toFixed(1) + ' m²';
+            } else {
+                // Modo dimensiones (ancho x alto en metros)
+                const objetivoAncho = parseFloat(elementos.objetivoAncho.value) || 1.0;
+                const objetivoAlto = parseFloat(elementos.objetivoAlto.value) || 1.0;
+                superficieObjetivo = objetivoAncho * objetivoAlto;
+                objetivo = superficieObjetivo;
+                
+                // Calcular rombos necesarios para cada dimensión
+                const rombosAncho = Math.ceil(objetivoAncho * config.rombosPorMetro);
+                const rombosAlto = Math.ceil(objetivoAlto * config.rombosPorMetro);
+                rombosObjetivo = rombosAncho * rombosAlto;
+                
+                // Mostrar valor objetivo
+                document.getElementById('objetivo-valor').textContent = objetivoAncho.toFixed(1) + 'm × ' + objetivoAlto.toFixed(1) + 'm';
+            }
             
             // Validación
             const alcanza = superficieRecorte >= rombosObjetivo;
@@ -990,7 +1115,6 @@
             elementos.validarResult.style.display = 'block';
             document.getElementById('recorte-dimensiones').textContent = `${recorteAncho}×${recorteAlto}`;
             document.getElementById('superficie-recorte').textContent = superficieRecorte;
-            document.getElementById('objetivo-valor').textContent = objetivo.toFixed(1) + ' m²';
             document.getElementById('rombos-objetivo').textContent = rombosObjetivo;
             
             // Configurar según resultado
@@ -1197,14 +1321,6 @@
         
         // INICIALIZAR APLICACIÓN CUANDO EL DOM ESTÉ LISTO
         document.addEventListener('DOMContentLoaded', init);
-        
-        // Verificar si ya está instalado al cargar
-        setTimeout(() => {
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                // Si no está instalado, verificar si podemos mostrar el botón
-                // Esto se manejará en el evento beforeinstallprompt
-            }
-        }, 1000);
     </script>
 </body>
 </html>
