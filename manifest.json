@@ -1,0 +1,24 @@
+{
+  "name": "Redes Balconeras - Carnevale",
+  "short_name": "Redes Balconeras",
+  "description": "Herramienta para medir, cortar y validar redes balconeras - Ferretería Carnevale",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#0a5c36",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%230a5c36%22>🔧</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/png;base64,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",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

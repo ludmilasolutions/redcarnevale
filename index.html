@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Herramienta para medir, cortar y validar redes balconeras - Ferretería Carnevale">
+    <meta name="theme-color" content="#0a5c36">
+    <title>Redes Balconeras - Ferretería Carnevale</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+    <style>
+        /* RESET Y ESTILOS BASE */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0a5c36 0%, #0e7c47 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            max-width: 90%;
+            margin: 0 auto;
+        }
+        
+        /* CONTENEDOR PRINCIPAL */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* NAVEGACIÓN POR MODOS */
+        .modes {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 1rem 0.5rem;
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .mode-btn.active {
+            color: #0a5c36;
+            background: #e8f5e9;
+        }
+        
+        .mode-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: #0a5c36;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        /* TARJETAS DE CONTENIDO */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: none;
+        }
+        
+        .card.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card h2 {
+            color: #0a5c36;
+            margin-bottom: 1.25rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card h2::before {
+            font-size: 1.2rem;
+        }
+        
+        /* FORMULARIOS */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .input-field {
+            flex: 1;
+            position: relative;
+        }
+        
+        .input-field input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field input:focus {
+            outline: none;
+            border-color: #0a5c36;
+        }
+        
+        .input-field span {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 500;
+        }
+        
+        /* BOTONES */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-primary {
+            background: #0a5c36;
+            color: white;
+        }
+        
+        .btn-primary:active {
+            background: #084429;
+            transform: translateY(2px);
+        }
+        
+        /* RESULTADOS */
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .result-success {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+        
+        .result-warning {
+            background: #fff8e1;
+            border: 2px solid #ffc107;
+        }
+        
+        .result-danger {
+            background: #ffebee;
+            border: 2px solid #f44336;
+        }
+        
+        .result h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .result-values {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .result-value {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .result-value .label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        
+        .result-value .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0a5c36;
+        }
+        
+        /* MENSAJES COMERCIALES */
+        .commercial-message {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            font-size: 0.95rem;
+        }
+        
+        /* CONFIGURACIÓN */
+        .config-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .config-panel h4 {
+            margin-bottom: 1rem;
+            color: #444;
+            font-size: 1rem;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .slider-container label {
+            min-width: 120px;
+            font-weight: 500;
+        }
+        
+        .slider-value {
+            min-width: 40px;
+            font-weight: 600;
+            color: #0a5c36;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: #0a5c36;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            color: #666;
+            font-size: 0.85rem;
+            border-top: 1px solid #eee;
+            margin-top: 2rem;
+        }
+        
+        /* INSTALACIÓN PWA */
+        .install-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #0a5c36;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(10, 92, 54, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+            border: none;
+        }
+        
+        /* RESPONSIVE */
+        @media (min-width: 768px) {
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .card {
+                padding: 2rem;
+            }
+            
+            .result-values {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .mode-btn {
+                font-size: 0.85rem;
+                padding: 0.9rem 0.25rem;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <h1>🔧 Redes Balconeras</h1>
+        <p>Herramienta para medir, cortar y validar - Ferretería Carnevale</p>
+    </div>
+    
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="container">
+        <!-- SELECTOR DE MODO -->
+        <div class="modes">
+            <button class="mode-btn active" data-mode="metros">Metros Lineales</button>
+            <button class="mode-btn" data-mode="superficie">Superficie (m²)</button>
+            <button class="mode-btn" data-mode="validar">Validar Recorte</button>
+        </div>
+        
+        <!-- MODO: METROS LINEALES -->
+        <div class="card active" id="metros-card">
+            <h2>📏 Metros Lineales</h2>
+            <p>Calcula los rombos necesarios para un largo específico</p>
+            
+            <div class="input-group">
+                <label>Metros solicitados:</label>
+                <div class="input-field">
+                    <input type="number" id="metros-input" min="0.1" step="0.1" value="1.0">
+                    <span>m</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="calcular-metros">Calcular</button>
+            
+            <!-- RESULTADO METROS -->
+            <div class="result" id="metros-result" style="display:none;">
+                <h3>📊 Resultado</h3>
+                <div class="result-values">
+                    <div class="result-value">
+                        <div class="label">Metros</div>
+                        <div class="value" id="metros-valor">1.0 m</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos base</div>
+                        <div class="value" id="rombos-base">14</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Margen extra</div>
+                        <div class="value" id="margen-calc">2</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Total recomendado</div>
+                        <div class="value" id="rombos-total">16</div>
+                    </div>
+                </div>
+                <p><strong>La red es flexible. La medida es aproximada.</strong></p>
+            </div>
+        </div>
+        
+        <!-- MODO: SUPERFICIE -->
+        <div class="card" id="superficie-card">
+            <h2>📐 Superficie (m²)</h2>
+            <p>Calcula rombos necesarios para cubrir un área rectangular</p>
+            
+            <div class="input-group">
+                <label>Dimensiones:</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="ancho-input" min="0.1" step="0.1" value="1.0" placeholder="Ancho">
+                        <span>m</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="alto-input" min="0.1" step="0.1" value="1.0" placeholder="Alto">
+                        <span>m</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="calcular-superficie">Calcular</button>
+            
+            <!-- RESULTADO SUPERFICIE -->
+            <div class="result" id="superficie-result" style="display:none;">
+                <h3>📊 Resultado</h3>
+                <div class="result-values">
+                    <div class="result-value">
+                        <div class="label">Superficie</div>
+                        <div class="value" id="superficie-valor">1.0 m²</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos ancho</div>
+                        <div class="value" id="rombos-ancho">14</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos alto</div>
+                        <div class="value" id="rombos-alto">14</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Total rombos</div>
+                        <div class="value" id="rombos-totales">196</div>
+                    </div>
+                </div>
+                <p><strong>La flexibilidad no genera superficie adicional.</strong></p>
+            </div>
+        </div>
+        
+        <!-- MODO: VALIDAR RECORTE -->
+        <div class="card" id="validar-card">
+            <h2>✂️ Validar Recorte</h2>
+            <p>Verifica si un recorte existente cubre una superficie objetivo</p>
+            
+            <div class="input-group">
+                <label>Dimensiones del recorte (en rombos):</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="recorte-ancho" min="1" value="10" placeholder="Ancho">
+                        <span>rombos</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="recorte-alto" min="1" value="18" placeholder="Alto">
+                        <span>rombos</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Superficie objetivo a cubrir:</label>
+                <div class="input-field">
+                    <input type="number" id="objetivo-superficie" min="0.1" step="0.1" value="1.0">
+                    <span>m²</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="validar-recorre">Validar</button>
+            
+            <!-- RESULTADO VALIDACIÓN -->
+            <div class="result" id="validar-result" style="display:none;">
+                <h3 id="validar-titulo">❓ Resultado</h3>
+                <div class="result-values">
+                    <div class="result-value">
+                        <div class="label">Recorte</div>
+                        <div class="value" id="recorte-dimensiones">10×18</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Superficie recorte</div>
+                        <div class="value" id="superficie-recorte">180</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Objetivo</div>
+                        <div class="value" id="objetivo-valor">1.0 m²</div>
+                    </div>
+                    <div class="result-value">
+                        <div class="label">Rombos necesarios</div>
+                        <div class="value" id="rombos-objetivo">196</div>
+                    </div>
+                </div>
+                <p id="validar-mensaje"><strong>La red se puede deformar, pero no crear metros cuadrados.</strong></p>
+            </div>
+        </div>
+        
+        <!-- MENSAJE COMERCIAL ALEATORIO -->
+        <div class="commercial-message" id="commercial-message">
+            <!-- Mensaje se cargará por JavaScript -->
+        </div>
+        
+        <!-- PANEL DE CONFIGURACIÓN -->
+        <div class="config-panel">
+            <h4>⚙️ Configuración</h4>
+            
+            <div class="slider-container">
+                <label>Rombos por metro:</label>
+                <input type="range" id="rombos-por-metro" min="10" max="18" step="1" value="14">
+                <div class="slider-value" id="rombos-por-metro-value">14</div>
+            </div>
+            
+            <div class="slider-container">
+                <label>Margen de seguridad:</label>
+                <input type="range" id="margen-seguridad" min="0" max="30" step="5" value="15">
+                <div class="slider-value" id="margen-seguridad-value">15%</div>
+            </div>
+            
+            <p style="font-size:0.85rem; color:#666; margin-top:1rem;">
+                Estos valores se guardan automáticamente en tu dispositivo.
+            </p>
+        </div>
+    </div>
+    
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.0 • Aplicación offline • Sin garantía de exactitud</p>
+    </div>
+    
+    <!-- BOTÓN INSTALAR PWA -->
+    <button class="install-btn" id="installButton" style="display:none;">⬇️</button>
+    
+    <!-- SCRIPTS -->
+    <script>
+        // CONFIGURACIÓN Y ESTADO
+        const config = {
+            rombosPorMetro: 14,
+            margenSeguridad: 15
+        };
+        
+        // MENSAJES COMERCIALES (OBLIGATORIOS)
+        const mensajesComerciales = [
+            "Medidas aproximadas por material flexible.",
+            "Se corta con margen para evitar faltantes.",
+            "La flexibilidad no reemplaza superficie.",
+            "La red es flexible y maniobrable.",
+            "Los rombos se deforman pero NO crean superficie nueva."
+        ];
+        
+        // ELEMENTOS DEL DOM
+        const elementos = {
+            // Modos
+            modeButtons: document.querySelectorAll('.mode-btn'),
+            cards: {
+                metros: document.getElementById('metros-card'),
+                superficie: document.getElementById('superficie-card'),
+                validar: document.getElementById('validar-card')
+            },
+            
+            // Inputs
+            metrosInput: document.getElementById('metros-input'),
+            anchoInput: document.getElementById('ancho-input'),
+            altoInput: document.getElementById('alto-input'),
+            recorteAncho: document.getElementById('recorte-ancho'),
+            recorteAlto: document.getElementById('recorte-alto'),
+            objetivoSuperficie: document.getElementById('objetivo-superficie'),
+            
+            // Botones
+            calcularMetrosBtn: document.getElementById('calcular-metros'),
+            calcularSuperficieBtn: document.getElementById('calcular-superficie'),
+            validarRecorteBtn: document.getElementById('validar-recorre'),
+            
+            // Resultados
+            metrosResult: document.getElementById('metros-result'),
+            superficieResult: document.getElementById('superficie-result'),
+            validarResult: document.getElementById('validar-result'),
+            
+            // Configuración
+            rombosPorMetroSlider: document.getElementById('rombos-por-metro'),
+            margenSeguridadSlider: document.getElementById('margen-seguridad'),
+            rombosPorMetroValue: document.getElementById('rombos-por-metro-value'),
+            margenSeguridadValue: document.getElementById('margen-seguridad-value'),
+            
+            // Mensaje comercial
+            commercialMessage: document.getElementById('commercial-message'),
+            
+            // Instalación PWA
+            installButton: document.getElementById('installButton')
+        };
+        
+        // INICIALIZACIÓN
+        function init() {
+            // Cargar configuración guardada
+            cargarConfiguracion();
+            
+            // Configurar eventos de navegación
+            configurarNavegacion();
+            
+            // Configurar eventos de cálculo
+            configurarEventosCalculo();
+            
+            // Configurar sliders de configuración
+            configurarSliders();
+            
+            // Mostrar mensaje comercial aleatorio
+            mostrarMensajeComercialAleatorio();
+            
+            // Configurar PWA
+            configurarPWA();
+            
+            // Calcular valores iniciales
+            calcularMetros();
+        }
+        
+        // CARGAR CONFIGURACIÓN GUARDADA
+        function cargarConfiguracion() {
+            const savedConfig = localStorage.getItem('configRedesBalconeras');
+            if (savedConfig) {
+                const parsedConfig = JSON.parse(savedConfig);
+                config.rombosPorMetro = parsedConfig.rombosPorMetro || 14;
+                config.margenSeguridad = parsedConfig.margenSeguridad || 15;
+                
+                // Actualizar controles
+                elementos.rombosPorMetroSlider.value = config.rombosPorMetro;
+                elementos.margenSeguridadSlider.value = config.margenSeguridad;
+                elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
+                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
+            }
+        }
+        
+        // GUARDAR CONFIGURACIÓN
+        function guardarConfiguracion() {
+            localStorage.setItem('configRedesBalconeras', JSON.stringify(config));
+        }
+        
+        // CONFIGURAR NAVEGACIÓN ENTRE MODOS
+        function configurarNavegacion() {
+            elementos.modeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover clase active de todos los botones y cards
+                    elementos.modeButtons.forEach(btn => btn.classList.remove('active'));
+                    Object.values(elementos.cards).forEach(card => card.classList.remove('active'));
+                    
+                    // Activar el modo seleccionado
+                    const mode = this.getAttribute('data-mode');
+                    this.classList.add('active');
+                    elementos.cards[mode].classList.add('active');
+                    
+                    // Ocultar resultados anteriores
+                    elementos.metrosResult.style.display = 'none';
+                    elementos.superficieResult.style.display = 'none';
+                    elementos.validarResult.style.display = 'none';
+                });
+            });
+        }
+        
+        // CONFIGURAR EVENTOS DE CÁLCULO
+        function configurarEventosCalculo() {
+            // Modo metros lineales
+            elementos.calcularMetrosBtn.addEventListener('click', calcularMetros);
+            elementos.metrosInput.addEventListener('input', calcularMetros);
+            
+            // Modo superficie
+            elementos.calcularSuperficieBtn.addEventListener('click', calcularSuperficie);
+            elementos.anchoInput.addEventListener('input', calcularSuperficie);
+            elementos.altoInput.addEventListener('input', calcularSuperficie);
+            
+            // Modo validar recorte
+            elementos.validarRecorteBtn.addEventListener('click', validarRecorte);
+            elementos.recorteAncho.addEventListener('input', validarRecorte);
+            elementos.recorteAlto.addEventListener('input', validarRecorte);
+            elementos.objetivoSuperficie.addEventListener('input', validarRecorte);
+        }
+        
+        // CONFIGURAR SLIDERS DE CONFIGURACIÓN
+        function configurarSliders() {
+            elementos.rombosPorMetroSlider.addEventListener('input', function() {
+                config.rombosPorMetro = parseInt(this.value);
+                elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
+                guardarConfiguracion();
+                
+                // Recalcular todos los modos
+                calcularMetros();
+                calcularSuperficie();
+                validarRecorte();
+            });
+            
+            elementos.margenSeguridadSlider.addEventListener('input', function() {
+                config.margenSeguridad = parseInt(this.value);
+                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
+                guardarConfiguracion();
+                
+                // Recalcular modo metros
+                calcularMetros();
+            });
+        }
+        
+        // MOSTRAR MENSAJE COMERCIAL ALEATORIO
+        function mostrarMensajeComercialAleatorio() {
+            const indice = Math.floor(Math.random() * mensajesComerciales.length);
+            elementos.commercialMessage.textContent = mensajesComerciales[indice];
+            
+            // Cambiar mensaje cada 30 segundos
+            setInterval(() => {
+                const nuevoIndice = Math.floor(Math.random() * mensajesComerciales.length);
+                elementos.commercialMessage.textContent = mensajesComerciales[nuevoIndice];
+            }, 30000);
+        }
+        
+        // CÁLCULO MODO METROS LINEALES
+        function calcularMetros() {
+            const metros = parseFloat(elementos.metrosInput.value) || 1.0;
+            const rombosBase = Math.ceil(metros * config.rombosPorMetro);
+            const margen = Math.ceil(rombosBase * (config.margenSeguridad / 100));
+            const totalRecomendado = rombosBase + margen;
+            
+            // Mostrar resultados
+            elementos.metrosResult.style.display = 'block';
+            document.getElementById('metros-valor').textContent = metros.toFixed(1) + ' m';
+            document.getElementById('rombos-base').textContent = rombosBase;
+            document.getElementById('margen-calc').textContent = '+' + margen;
+            document.getElementById('rombos-total').textContent = totalRecomendado;
+            
+            // Establecer color según margen
+            if (config.margenSeguridad >= 15) {
+                elementos.metrosResult.className = 'result result-success';
+            } else if (config.margenSeguridad >= 10) {
+                elementos.metrosResult.className = 'result result-warning';
+            } else {
+                elementos.metrosResult.className = 'result result-danger';
+            }
+        }
+        
+        // CÁLCULO MODO SUPERFICIE
+        function calcularSuperficie() {
+            const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
+            const alto = parseFloat(elementos.altoInput.value) || 1.0;
+            const superficie = ancho * alto;
+            
+            const rombosAncho = Math.ceil(ancho * config.rombosPorMetro);
+            const rombosAlto = Math.ceil(alto * config.rombosPorMetro);
+            const rombosTotales = rombosAncho * rombosAlto;
+            
+            // Mostrar resultados
+            elementos.superficieResult.style.display = 'block';
+            document.getElementById('superficie-valor').textContent = superficie.toFixed(2) + ' m²';
+            document.getElementById('rombos-ancho').textContent = rombosAncho;
+            document.getElementById('rombos-alto').textContent = rombosAlto;
+            document.getElementById('rombos-totales').textContent = rombosTotales;
+            
+            // Establecer color según superficie
+            if (superficie <= 2) {
+                elementos.superficieResult.className = 'result result-success';
+            } else if (superficie <= 5) {
+                elementos.superficieResult.className = 'result result-warning';
+            } else {
+                elementos.superficieResult.className = 'result result-danger';
+            }
+        }
+        
+        // VALIDACIÓN DE RECORTE (MODO CRÍTICO)
+        function validarRecorte() {
+            const recorteAncho = parseInt(elementos.recorteAncho.value) || 10;
+            const recorteAlto = parseInt(elementos.recorteAlto.value) || 18;
+            const objetivo = parseFloat(elementos.objetivoSuperficie.value) || 1.0;
+            
+            const superficieRecorte = recorteAncho * recorteAlto;
+            
+            // Cálculo de rombos necesarios para la superficie objetivo
+            // Para una superficie cuadrada aproximada: lado = √superficie
+            const ladoMetros = Math.sqrt(objetivo);
+            const rombosPorLado = Math.ceil(ladoMetros * config.rombosPorMetro);
+            const rombosObjetivo = rombosPorLado * rombosPorLado;
+            
+            // Validación
+            const alcanza = superficieRecorte >= rombosObjetivo;
+            
+            // Mostrar resultados
+            elementos.validarResult.style.display = 'block';
+            document.getElementById('recorte-dimensiones').textContent = `${recorteAncho}×${recorteAlto}`;
+            document.getElementById('superficie-recorte').textContent = superficieRecorte;
+            document.getElementById('objetivo-valor').textContent = objetivo.toFixed(1) + ' m²';
+            document.getElementById('rombos-objetivo').textContent = rombosObjetivo;
+            
+            // Configurar según resultado
+            const titulo = document.getElementById('validar-titulo');
+            const mensaje = document.getElementById('validar-mensaje');
+            
+            if (alcanza) {
+                elementos.validarResult.className = 'result result-success';
+                titulo.innerHTML = '✔ <span>EL RECORTE ALCANZA</span>';
+                mensaje.innerHTML = '<strong>El recorte disponible cubre la superficie objetivo.</strong>';
+            } else {
+                elementos.validarResult.className = 'result result-danger';
+                titulo.innerHTML = '❌ <span>NO ALCANZA – FALTA SUPERFICIE</span>';
+                const faltan = rombosObjetivo - superficieRecorte;
+                mensaje.innerHTML = `<strong>La red se puede deformar, pero no crear metros cuadrados.<br>Faltan aproximadamente ${faltan} rombos.</strong>`;
+            }
+        }
+        
+        // CONFIGURACIÓN PWA
+        function configurarPWA() {
+            // Registrar Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('service-worker.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registrado con éxito:', registration.scope);
+                        })
+                        .catch(error => {
+                            console.log('Error al registrar ServiceWorker:', error);
+                        });
+                });
+            }
+            
+            // Detectar si la app se puede instalar
+            let deferredPrompt;
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevenir que el navegador muestre el prompt automáticamente
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Mostrar botón de instalación
+                elementos.installButton.style.display = 'flex';
+                
+                // Configurar evento del botón
+                elementos.installButton.addEventListener('click', async () => {
+                    // Mostrar el prompt de instalación
+                    deferredPrompt.prompt();
+                    
+                    // Esperar a que el usuario responda
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('Usuario aceptó instalar la PWA');
+                        elementos.installButton.style.display = 'none';
+                    } else {
+                        console.log('Usuario rechazó instalar la PWA');
+                    }
+                    
+                    deferredPrompt = null;
+                });
+            });
+            
+            // Ocultar botón de instalación cuando la app ya está instalada
+            window.addEventListener('appinstalled', () => {
+                elementos.installButton.style.display = 'none';
+                deferredPrompt = null;
+                console.log('PWA instalada');
+            });
+        }
+        
+        // INICIALIZAR APLICACIÓN CUANDO EL DOM ESTÉ LISTO
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
