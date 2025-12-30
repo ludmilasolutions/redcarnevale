@@ -1,5 +1,5 @@
 // Nombre de la cache y archivos a cachear
-const CACHE_NAME = 'redes-balconeras-v1.1';
+const CACHE_NAME = 'redes-balconeras-v1.2';
 const urlsToCache = [
   './',
   './index.html',
