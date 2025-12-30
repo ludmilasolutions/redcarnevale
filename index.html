@@ -925,10 +925,18 @@
                     this.classList.add('active');
                     elementos.cards[mode].classList.add('active');
                     
-                    // Ocultar resultados anteriores
-                    elementos.metrosResult.style.display = 'none';
-                    elementos.superficieResult.style.display = 'none';
-                    elementos.validarResult.style.display = 'none';
+                    // Si estamos en el modo metros, mostrar el resultado si ya fue calculado
+                    if (mode === 'metros' && elementos.metrosResult.style.display === 'block') {
+                        calcularMetros();
+                    }
+                    // Si estamos en el modo superficie, mostrar el resultado si ya fue calculado
+                    if (mode === 'superficie' && elementos.superficieResult.style.display === 'block') {
+                        calcularSuperficie();
+                    }
+                    // Si estamos en el modo validar, mostrar el resultado si ya fue calculado
+                    if (mode === 'validar' && elementos.validarResult.style.display === 'block') {
+                        validarRecorte();
+                    }
                 });
             });
         }
@@ -991,10 +999,16 @@
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
                 guardarConfiguracion();
                 
-                // Recalcular todos los modos
-                calcularMetros();
-                calcularSuperficie();
-                validarRecorte();
+                // Recalcular todos los modos si están visibles
+                if (elementos.metrosResult.style.display === 'block') {
+                    calcularMetros();
+                }
+                if (elementos.superficieResult.style.display === 'block') {
+                    calcularSuperficie();
+                }
+                if (elementos.validarResult.style.display === 'block') {
+                    validarRecorte();
+                }
             });
             
             elementos.margenSeguridadSlider.addEventListener('input', function() {
@@ -1002,8 +1016,10 @@
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
                 guardarConfiguracion();
                 
-                // Recalcular modo metros
-                calcularMetros();
+                // Recalcular modo metros si el resultado está visible
+                if (elementos.metrosResult.style.display === 'block') {
+                    calcularMetros();
+                }
             });
         }
         
