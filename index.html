@@ -566,6 +566,88 @@
             cursor: pointer;
         }
         
+        /* ESTIRAMIENTO */
+        .estiramiento-section {
+            background: #fff8e1;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border: 1px solid #ffd54f;
+        }
+        
+        .estiramiento-section h4 {
+            color: #ff8f00;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .estiramiento-section p {
+            font-size: 0.9rem;
+            color: #5d4037;
+            margin-bottom: 1rem;
+        }
+        
+        .comparacion-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .comparacion-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .comparacion-item.sin-estirar {
+            border-top: 4px solid #4caf50;
+        }
+        
+        .comparacion-item.con-estirar {
+            border-top: 4px solid #ff9800;
+        }
+        
+        /* ROMBO INFO */
+        .rombo-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .rombo-visual {
+            width: 80px;
+            height: 80px;
+            background: #e8f5e9;
+            border: 2px solid #0a5c36;
+            transform: rotate(45deg);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .rombo-visual::before {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 70%;
+            border: 1px dashed #4caf50;
+            transform: rotate(45deg);
+        }
+        
+        .rombo-visual span {
+            transform: rotate(-45deg);
+            font-weight: bold;
+            color: #0a5c36;
+        }
+        
         /* FOOTER */
         .footer {
             text-align: center;
@@ -739,6 +821,10 @@
             .result-actions {
                 flex-direction: row;
             }
+            
+            .comparacion-container {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         /* Ajustes para pantallas muy pequeñas */
@@ -778,6 +864,16 @@
                 width: 100%;
                 margin-left: 0;
                 margin-top: 0.5rem;
+            }
+            
+            .comparacion-container {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .rombo-info {
+                flex-direction: column;
+                gap: 0.5rem;
             }
         }
         
@@ -829,6 +925,7 @@
             <button class="mode-btn active" data-mode="superficie">Superficie (m²)</button>
             <button class="mode-btn" data-mode="presupuesto">💰 Presupuesto</button>
             <button class="mode-btn" data-mode="validar">Validar Recorte</button>
+            <button class="mode-btn" data-mode="estirar">🔄 Aprovechar Retazos</button>
         </div>
         
         <!-- MODO: METROS LINEALES -->
@@ -1144,6 +1241,134 @@
             </div>
         </div>
         
+        <!-- MODO: APROVECHAR RETAZOS (ESTIRAMIENTO REALISTA) -->
+        <div class="card" id="estirar-card">
+            <h2>🔄 Aprovechar Retazos</h2>
+            <p>Calcula cómo estirar retazos aprovechando que cada rombo mide 7×7 cm</p>
+            
+            <div class="estiramiento-section">
+                <h4>⚡ Física del estiramiento</h4>
+                <div class="rombo-info">
+                    <div class="rombo-visual">
+                        <span>7×7</span>
+                    </div>
+                    <div>
+                        <p><strong>Cada rombo mide 7×7 cm normalmente</strong></p>
+                        <p>Al estirar de un lado hasta 9 cm, del otro lado se reduce a 5 cm</p>
+                        <p>Área aproximada: ~35 cm² (7×5) cuando está estirado</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Retazo disponible (en rombos):</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="retazo-ancho" min="1" value="10" placeholder="Ancho">
+                        <span>rombos</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="retazo-alto" min="1" value="18" placeholder="Alto">
+                        <span>rombos</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Medida a cubrir:</label>
+                <div class="input-row">
+                    <div class="input-field">
+                        <input type="number" id="objetivo-estirar-ancho" min="0.1" step="0.1" value="0.8" placeholder="Ancho">
+                        <span>m</span>
+                    </div>
+                    <div class="input-field">
+                        <input type="number" id="objetivo-estirar-alto" min="0.1" step="0.1" value="1.2" placeholder="Alto">
+                        <span>m</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SELECTOR DE ESTRATEGIA -->
+            <div class="selector-modos">
+                <button class="selector-btn active" data-estrategia="optimizar">Optimizar Automáticamente</button>
+                <button class="selector-btn" data-estrategia="manual">Estirar Manualmente</button>
+            </div>
+            
+            <!-- CONTROLES MANUALES (OCULTOS INICIALMENTE) -->
+            <div class="config-panel" id="controles-manuales" style="display:none;">
+                <h4>⚙️ Controles de Estiramiento</h4>
+                
+                <div class="slider-container">
+                    <label>Estirar en ancho:</label>
+                    <input type="range" id="estirar-ancho" min="0" max="28.6" step="0.1" value="0">
+                    <div class="slider-value" id="estirar-ancho-value">0%</div>
+                </div>
+                
+                <div class="slider-container">
+                    <label>Estirar en alto:</label>
+                    <input type="range" id="estirar-alto" min="0" max="28.6" step="0.1" value="0">
+                    <div class="slider-value" id="estirar-alto-value">0%</div>
+                </div>
+                
+                <p style="font-size:0.85rem; color:#666;">
+                    <strong>Nota:</strong> Máximo 28.6% de estiramiento (7cm → 9cm)
+                </p>
+            </div>
+            
+            <button class="btn btn-primary" id="calcular-estiramiento">Calcular Aprovechamiento</button>
+            
+            <!-- RESULTADO ESTIRAMIENTO -->
+            <div class="result" id="estirar-result" style="display:none;">
+                <h3>📊 Resultado del Aprovechamiento</h3>
+                
+                <div class="comparacion-container">
+                    <div class="comparacion-item sin-estirar">
+                        <div class="label">RETAZO NORMAL</div>
+                        <div class="value" id="sin-estirar-dim">0.70×1.26m</div>
+                        <div class="sub-value">7×7 cm por rombo</div>
+                        <div class="sub-value" id="sin-estirar-cubre">❌ No alcanza</div>
+                    </div>
+                    
+                    <div class="comparacion-item con-estirar">
+                        <div class="label">RETAZO ESTIRADO</div>
+                        <div class="value" id="con-estirar-dim">0.80×1.13m</div>
+                        <div class="sub-value" id="rombo-estirado-dim">8.0×6.3 cm</div>
+                        <div class="sub-value" id="con-estirar-cubre">✅ Alcanza</div>
+                    </div>
+                </div>
+                
+                <div class="result-values" style="margin-top: 1.5rem;">
+                    <div class="result-value">
+                        <div class="label">Objetivo</div>
+                        <div class="value" id="objetivo-estirar-dim">0.8×1.2m</div>
+                        <div class="sub-value">Superficie: 0.96m²</div>
+                    </div>
+                    
+                    <div class="result-value">
+                        <div class="label">Estiramiento aplicado</div>
+                        <div class="value" id="estiramiento-aplicado">14.3%</div>
+                        <div class="sub-value" id="distribucion-estiramiento">(14.3% ancho, 0% alto)</div>
+                    </div>
+                </div>
+                
+                <div id="estrategia-detalle">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+                
+                <div class="commercial-message" style="background:#e8f5e9; border-color:#4caf50; margin-top: 1rem;">
+                    <strong>💡 Aprovechamiento exitoso:</strong> 
+                    Este retazo puede estirarse para cubrir la medida solicitada.
+                    <br><small>Nota: Al estirar en una dirección, la perpendicular se reduce proporcionalmente.</small>
+                </div>
+                
+                <div class="commercial-message" style="background:#fff8e1; border-color:#ff9800; margin-top: 1rem;">
+                    <strong>⚠️ Límites físicos:</strong> 
+                    Cada rombo puede estirarse máximo a 9×5 cm (28.6% de estiramiento).
+                    No exceder este límite para mantener la integridad estructural.
+                </div>
+            </div>
+        </div>
+        
         <!-- MENSAJE COMERCIAL ALEATORIO -->
         <div class="commercial-message" id="commercial-message">
             <!-- Mensaje se cargará por JavaScript -->
@@ -1174,7 +1399,7 @@
     <!-- FOOTER -->
     <div class="footer">
         <p>Ferretería Carnevale • Herramienta de apoyo comercial • Medidas aproximadas</p>
-        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.6 • Sistema de presupuestos • Exportar PDF • Aplicación offline</p>
+        <p style="font-size:0.75rem; margin-top:0.5rem;">v1.8 • Estiramiento realista 7×7 → 9×5 cm • Física de rombos</p>
         <p class="credits">creado por sebastian mascali</p>
     </div>
     
@@ -1203,18 +1428,24 @@
         // CONFIGURACIÓN Y ESTADO
         const config = {
             rombosPorMetro: 14,
-            margenSeguridad: 0, // CAMBIO IMPORTANTE: 0% por defecto en lugar de 15%
-            extraSogaNudos: 10, // porcentaje extra para nudos
-            distanciaPitones: 30, // distancia en cm entre pitones
-            incluirIVA: true // IVA opcional, por defecto activado
+            margenSeguridad: 0,
+            extraSogaNudos: 10,
+            distanciaPitones: 30,
+            incluirIVA: true
         };
+        
+        // CONSTANTES DE ROMBOS (FÍSICA REAL)
+        const ROMBO_NORMAL_CM = 7;      // 7×7 cm normalmente
+        const ROMBO_ESTIRADO_MAX_CM = 9; // Máximo estirado en una dirección
+        const ROMBO_ESTIRADO_MIN_CM = 5; // Mínimo en la dirección perpendicular
+        const ROMBO_NORMAL_M = ROMBO_NORMAL_CM / 100;
         
         // PRECIOS POR DEFECTO ACTUALIZADOS (RED POR M²)
         const precios = {
-            red: 5500,    // por m² - CAMBIO: de 4.50 a 5500
-            piton: 250,   // cada pitón N6 - CAMBIO: de 0.80 a 250
-            soga: 200,    // por metro lineal - CAMBIO: de 0.25 a 200
-            tarugo: 50    // cada tarugo N6 - CAMBIO: de 0.10 a 50
+            red: 5500,
+            piton: 250,
+            soga: 200,
+            tarugo: 50
         };
         
         // MENSAJES COMERCIALES (OBLIGATORIOS)
@@ -1229,7 +1460,12 @@
             "Red vendida por metro cuadrado.",
             "Todos los precios pueden incluir IVA (opcional).",
             "Pitones y tarugos N6 para instalación profesional.",
-            "Margen de seguridad configurable desde 0%."
+            "Margen de seguridad configurable desde 0%.",
+            "¡Cada rombo mide 7×7 cm normalmente!",
+            "Al estirar: 9 cm en una dirección, 5 cm en la perpendicular.",
+            "Los retazos estirados ahorran material y dinero.",
+            "Máximo estiramiento: 28.6% (7cm → 9cm).",
+            "Aprovecha retazos con estiramiento controlado."
         ];
         
         // DATOS PARA PDF
@@ -1243,7 +1479,8 @@
                 metros: document.getElementById('metros-card'),
                 superficie: document.getElementById('superficie-card'),
                 presupuesto: document.getElementById('presupuesto-card'),
-                validar: document.getElementById('validar-card')
+                validar: document.getElementById('validar-card'),
+                estirar: document.getElementById('estirar-card')
             },
             
             // Inputs generales
@@ -1282,6 +1519,22 @@
             inputSuperficie: document.getElementById('input-superficie'),
             inputDimensiones: document.getElementById('input-dimensiones'),
             
+            // Estiramiento - Nuevos elementos
+            retazoAncho: document.getElementById('retazo-ancho'),
+            retazoAlto: document.getElementById('retazo-alto'),
+            objetivoEstirarAncho: document.getElementById('objetivo-estirar-ancho'),
+            objetivoEstirarAlto: document.getElementById('objetivo-estirar-alto'),
+            
+            // Selector de estrategia en estiramiento
+            selectorEstrategiaBtns: document.querySelectorAll('[data-estrategia]'),
+            controlesManuales: document.getElementById('controles-manuales'),
+            
+            // Sliders de estiramiento manual
+            estirarAnchoSlider: document.getElementById('estirar-ancho'),
+            estirarAltoSlider: document.getElementById('estirar-alto'),
+            estirarAnchoValue: document.getElementById('estirar-ancho-value'),
+            estirarAltoValue: document.getElementById('estirar-alto-value'),
+            
             // Botones
             calcularMetrosBtn: document.getElementById('calcular-metros'),
             calcularSuperficieBtn: document.getElementById('calcular-superficie'),
@@ -1290,12 +1543,14 @@
             exportarPDFBtn: document.getElementById('exportar-pdf'),
             copiarPresupuestoBtn: document.getElementById('copiar-presupuesto'),
             validarRecorteBtn: document.getElementById('validar-recorre'),
+            calcularEstiramientoBtn: document.getElementById('calcular-estiramiento'),
             
             // Resultados
             metrosResult: document.getElementById('metros-result'),
             superficieResult: document.getElementById('superficie-result'),
             presupuestoResult: document.getElementById('presupuesto-result'),
             validarResult: document.getElementById('validar-result'),
+            estirarResult: document.getElementById('estirar-result'),
             
             // Tabla de presupuesto
             budgetTableBody: document.getElementById('budget-table-body'),
@@ -1340,6 +1595,9 @@
             // Configurar selector de tipo en validación
             configurarSelectorValidacion();
             
+            // Configurar selector de estrategia en estiramiento
+            configurarSelectorEstrategia();
+            
             // Configurar evento IVA
             configurarIVA();
             
@@ -1353,13 +1611,13 @@
             calcularSuperficie();
         }
         
-        // CARGAR CONFIGURACIÓN GUARDADA (CON MEMORIA PARA MARGEN)
+        // CARGAR CONFIGURACIÓN GUARDADA
         function cargarConfiguracion() {
             const savedConfig = localStorage.getItem('configRedesBalconeras');
             if (savedConfig) {
                 const parsedConfig = JSON.parse(savedConfig);
                 config.rombosPorMetro = parsedConfig.rombosPorMetro || 14;
-                config.margenSeguridad = parsedConfig.margenSeguridad !== undefined ? parsedConfig.margenSeguridad : 0; // CAMBIO: 0 por defecto
+                config.margenSeguridad = parsedConfig.margenSeguridad !== undefined ? parsedConfig.margenSeguridad : 0;
                 config.extraSogaNudos = parsedConfig.extraSogaNudos || 10;
                 config.distanciaPitones = parsedConfig.distanciaPitones || 30;
                 config.incluirIVA = parsedConfig.incluirIVA !== undefined ? parsedConfig.incluirIVA : true;
@@ -1372,14 +1630,10 @@
                 elementos.incluirIVACheckbox.checked = config.incluirIVA;
                 
                 elementos.rombosPorMetroValue.textContent = config.rombosPorMetro;
-                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%'; // Mostrar el valor guardado
+                elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
                 elementos.extraSogaValue.textContent = config.extraSogaNudos + '%';
                 elementos.distanciaPitonesValue.textContent = config.distanciaPitones + ' cm';
                 elementos.ivaInfo.textContent = config.incluirIVA ? 'IVA incluido' : 'Sin IVA';
-            } else {
-                // Si no hay configuración guardada, usar valores por defecto
-                elementos.margenSeguridadSlider.value = 0;
-                elementos.margenSeguridadValue.textContent = '0%';
             }
         }
         
@@ -1401,7 +1655,7 @@
             }
         }
         
-        // GUARDAR CONFIGURACIÓN (INCLUYE MARGEN)
+        // GUARDAR CONFIGURACIÓN
         function guardarConfiguracion() {
             localStorage.setItem('configRedesBalconeras', JSON.stringify(config));
         }
@@ -1470,6 +1724,10 @@
                     if (mode === 'validar' && elementos.validarResult.style.display === 'block') {
                         validarRecorte();
                     }
+                    // Si estamos en el modo estirar, mostrar el resultado si ya fue calculado
+                    if (mode === 'estirar' && elementos.estirarResult.style.display === 'block') {
+                        calcularEstiramiento();
+                    }
                 });
             });
         }
@@ -1497,6 +1755,28 @@
                     
                     // Recalcular validación
                     validarRecorte();
+                });
+            });
+        }
+        
+        // CONFIGURAR SELECTOR DE ESTRATEGIA EN ESTIRAMIENTO
+        function configurarSelectorEstrategia() {
+            elementos.selectorEstrategiaBtns.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover clase active de todos los botones
+                    elementos.selectorEstrategiaBtns.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Activar el botón seleccionado
+                    this.classList.add('active');
+                    
+                    // Mostrar/ocultar controles según estrategia
+                    const estrategia = this.getAttribute('data-estrategia');
+                    
+                    if (estrategia === 'manual') {
+                        elementos.controlesManuales.style.display = 'block';
+                    } else {
+                        elementos.controlesManuales.style.display = 'none';
+                    }
                 });
             });
         }
@@ -1534,9 +1814,29 @@
             elementos.objetivoSuperficie.addEventListener('input', validarRecorte);
             elementos.objetivoAncho.addEventListener('input', validarRecorte);
             elementos.objetivoAlto.addEventListener('input', validarRecorte);
+            
+            // Modo estiramiento - Nuevos eventos
+            elementos.calcularEstiramientoBtn.addEventListener('click', calcularEstiramiento);
+            elementos.retazoAncho.addEventListener('input', calcularEstiramiento);
+            elementos.retazoAlto.addEventListener('input', calcularEstiramiento);
+            elementos.objetivoEstirarAncho.addEventListener('input', calcularEstiramiento);
+            elementos.objetivoEstirarAlto.addEventListener('input', calcularEstiramiento);
+            
+            // Eventos para sliders de estiramiento manual
+            elementos.estirarAnchoSlider.addEventListener('input', function() {
+                const valor = parseFloat(this.value);
+                elementos.estirarAnchoValue.textContent = valor.toFixed(1) + '%';
+                calcularEstiramiento();
+            });
+            
+            elementos.estirarAltoSlider.addEventListener('input', function() {
+                const valor = parseFloat(this.value);
+                elementos.estirarAltoValue.textContent = valor.toFixed(1) + '%';
+                calcularEstiramiento();
+            });
         }
         
-        // CONFIGURAR SLIDERS DE CONFIGURACIÓN (CON MEMORIA PARA MARGEN)
+        // CONFIGURAR SLIDERS DE CONFIGURACIÓN
         function configurarSliders() {
             // Slider rombos por metro
             elementos.rombosPorMetroSlider.addEventListener('input', function() {
@@ -1548,11 +1848,11 @@
                 recalcularModosActivos();
             });
             
-            // Slider margen de seguridad - CON MEMORIA
+            // Slider margen de seguridad
             elementos.margenSeguridadSlider.addEventListener('input', function() {
                 config.margenSeguridad = parseInt(this.value);
                 elementos.margenSeguridadValue.textContent = config.margenSeguridad + '%';
-                guardarConfiguracion(); // GUARDA EL VALOR EN LOCALSTORAGE
+                guardarConfiguracion();
                 
                 // Recalcular todos los modos si están visibles
                 recalcularModosActivos();
@@ -1597,6 +1897,9 @@
             if (elementos.validarResult.style.display === 'block') {
                 validarRecorte();
             }
+            if (elementos.estirarResult.style.display === 'block') {
+                calcularEstiramiento();
+            }
         }
         
         // MOSTRAR MENSAJE COMERCIAL ALEATORIO
@@ -1634,6 +1937,247 @@
             }, 3000);
         }
         
+        // FUNCIONES DE CÁLCULO DE ESTIRAMIENTO REALISTA
+        function calcularEstiramiento() {
+            // Obtener valores
+            const retazoAncho = parseInt(elementos.retazoAncho.value) || 10;
+            const retazoAlto = parseInt(elementos.retazoAlto.value) || 18;
+            const objetivoAncho = parseFloat(elementos.objetivoEstirarAncho.value) || 0.8;
+            const objetivoAlto = parseFloat(elementos.objetivoEstirarAlto.value) || 1.2;
+            
+            // Determinar estrategia activa
+            const estrategiaActiva = document.querySelector('[data-estrategia].active').getAttribute('data-estrategia');
+            
+            // Calcular dimensiones sin estirar
+            const anchoSinEstirar = retazoAncho * ROMBO_NORMAL_M;
+            const altoSinEstirar = retazoAlto * ROMBO_NORMAL_M;
+            
+            // Calcular estiramiento necesario en cada dirección
+            const estiramientoNecesarioAncho = ((objetivoAncho / anchoSinEstirar) - 1) * 100;
+            const estiramientoNecesarioAlto = ((objetivoAlto / altoSinEstirar) - 1) * 100;
+            
+            let estiramientoAplicadoAncho = 0;
+            let estiramientoAplicadoAlto = 0;
+            let romboAnchoCm = ROMBO_NORMAL_CM;
+            let romboAltoCm = ROMBO_NORMAL_CM;
+            
+            if (estrategiaActiva === 'optimizar') {
+                // ESTRATEGIA: OPTIMIZAR AUTOMÁTICAMENTE
+                // Intentamos cubrir primero la dirección con mayor déficit
+                
+                const deficitAncho = objetivoAncho - anchoSinEstirar;
+                const deficitAlto = objetivoAlto - altoSinEstirar;
+                
+                // Si ambas dimensiones ya están cubiertas
+                if (deficitAncho <= 0 && deficitAlto <= 0) {
+                    estiramientoAplicadoAncho = 0;
+                    estiramientoAplicadoAlto = 0;
+                }
+                // Si solo falta en una dirección
+                else if (deficitAncho > 0 && deficitAlto <= 0) {
+                    // Solo estirar en ancho
+                    estiramientoAplicadoAncho = Math.min(28.6, estiramientoNecesarioAncho);
+                    estiramientoAplicadoAncho = Math.max(0, estiramientoAplicadoAncho);
+                    
+                    // Calcular reducción en alto (proporcional)
+                    const factorEstiramiento = 1 + (estiramientoAplicadoAncho / 100);
+                    const reduccionAlto = (1 - (1 / factorEstiramiento)) * 100;
+                    
+                    romboAnchoCm = ROMBO_NORMAL_CM * factorEstiramiento;
+                    romboAltoCm = ROMBO_NORMAL_CM / factorEstiramiento;
+                    
+                    // Limitar a los límites físicos
+                    if (romboAnchoCm > ROMBO_ESTIRADO_MAX_CM) {
+                        romboAnchoCm = ROMBO_ESTIRADO_MAX_CM;
+                        romboAltoCm = ROMBO_ESTIRADO_MIN_CM;
+                    }
+                }
+                else if (deficitAlto > 0 && deficitAncho <= 0) {
+                    // Solo estirar en alto
+                    estiramientoAplicadoAlto = Math.min(28.6, estiramientoNecesarioAlto);
+                    estiramientoAplicadoAlto = Math.max(0, estiramientoAplicadoAlto);
+                    
+                    // Calcular reducción en ancho (proporcional)
+                    const factorEstiramiento = 1 + (estiramientoAplicadoAlto / 100);
+                    const reduccionAncho = (1 - (1 / factorEstiramiento)) * 100;
+                    
+                    romboAltoCm = ROMBO_NORMAL_CM * factorEstiramiento;
+                    romboAnchoCm = ROMBO_NORMAL_CM / factorEstiramiento;
+                    
+                    // Limitar a los límites físicos
+                    if (romboAltoCm > ROMBO_ESTIRADO_MAX_CM) {
+                        romboAltoCm = ROMBO_ESTIRADO_MAX_CM;
+                        romboAnchoCm = ROMBO_ESTIRADO_MIN_CM;
+                    }
+                }
+                else {
+                    // Falta en ambas direcciones - intentar solución balanceada
+                    // Priorizar la dirección con mayor déficit relativo
+                    const deficitRelativoAncho = deficitAncho / anchoSinEstirar;
+                    const deficitRelativoAlto = deficitAlto / altoSinEstirar;
+                    
+                    if (deficitRelativoAncho >= deficitRelativoAlto) {
+                        // Estirar más en ancho
+                        estiramientoAplicadoAncho = Math.min(28.6, estiramientoNecesarioAncho * 0.7);
+                        const factorEstiramiento = 1 + (estiramientoAplicadoAncho / 100);
+                        
+                        romboAnchoCm = ROMBO_NORMAL_CM * factorEstiramiento;
+                        romboAltoCm = ROMBO_NORMAL_CM / factorEstiramiento;
+                        
+                        // Verificar si con esto alcanza en alto
+                        const altoConEstirar = retazoAlto * (romboAltoCm / 100);
+                        if (altoConEstirar < objetivoAlto) {
+                            // Necesitamos también estirar en alto
+                            estiramientoAplicadoAlto = Math.min(28.6, ((objetivoAlto / altoConEstirar) - 1) * 100);
+                            const factorEstiramientoAlto = 1 + (estiramientoAplicadoAlto / 100);
+                            
+                            romboAltoCm = romboAltoCm * factorEstiramientoAlto;
+                            romboAnchoCm = romboAnchoCm / factorEstiramientoAlto;
+                        }
+                    } else {
+                        // Estirar más en alto
+                        estiramientoAplicadoAlto = Math.min(28.6, estiramientoNecesarioAlto * 0.7);
+                        const factorEstiramiento = 1 + (estiramientoAplicadoAlto / 100);
+                        
+                        romboAltoCm = ROMBO_NORMAL_CM * factorEstiramiento;
+                        romboAnchoCm = ROMBO_NORMAL_CM / factorEstiramiento;
+                        
+                        // Verificar si con esto alcanza en ancho
+                        const anchoConEstirar = retazoAncho * (romboAnchoCm / 100);
+                        if (anchoConEstirar < objetivoAncho) {
+                            // Necesitamos también estirar en ancho
+                            estiramientoAplicadoAncho = Math.min(28.6, ((objetivoAncho / anchoConEstirar) - 1) * 100);
+                            const factorEstiramientoAncho = 1 + (estiramientoAplicadoAncho / 100);
+                            
+                            romboAnchoCm = romboAnchoCm * factorEstiramientoAncho;
+                            romboAltoCm = romboAltoCm / factorEstiramientoAncho;
+                        }
+                    }
+                    
+                    // Limitar a los límites físicos
+                    if (romboAnchoCm > ROMBO_ESTIRADO_MAX_CM) romboAnchoCm = ROMBO_ESTIRADO_MAX_CM;
+                    if (romboAltoCm > ROMBO_ESTIRADO_MAX_CM) romboAltoCm = ROMBO_ESTIRADO_MAX_CM;
+                    if (romboAnchoCm < ROMBO_ESTIRADO_MIN_CM) romboAnchoCm = ROMBO_ESTIRADO_MIN_CM;
+                    if (romboAltoCm < ROMBO_ESTIRADO_MIN_CM) romboAltoCm = ROMBO_ESTIRADO_MIN_CM;
+                }
+            } else {
+                // ESTRATEGIA: MANUAL - usar valores de los sliders
+                estiramientoAplicadoAncho = parseFloat(elementos.estirarAnchoSlider.value) || 0;
+                estiramientoAplicadoAlto = parseFloat(elementos.estirarAltoSlider.value) || 0;
+                
+                // Calcular dimensiones del rombo
+                const factorEstiramientoAncho = 1 + (estiramientoAplicadoAncho / 100);
+                const factorEstiramientoAlto = 1 + (estiramientoAplicadoAlto / 100);
+                
+                romboAnchoCm = ROMBO_NORMAL_CM * factorEstiramientoAncho;
+                romboAltoCm = ROMBO_NORMAL_CM * factorEstiramientoAlto;
+                
+                // Aplicar reducción en la dirección perpendicular
+                if (estiramientoAplicadoAncho > 0) {
+                    romboAltoCm = romboAltoCm / factorEstiramientoAncho;
+                }
+                if (estiramientoAplicadoAlto > 0) {
+                    romboAnchoCm = romboAnchoCm / factorEstiramientoAlto;
+                }
+                
+                // Limitar a los límites físicos
+                if (romboAnchoCm > ROMBO_ESTIRADO_MAX_CM) romboAnchoCm = ROMBO_ESTIRADO_MAX_CM;
+                if (romboAltoCm > ROMBO_ESTIRADO_MAX_CM) romboAltoCm = ROMBO_ESTIRADO_MAX_CM;
+                if (romboAnchoCm < ROMBO_ESTIRADO_MIN_CM) romboAnchoCm = ROMBO_ESTIRADO_MIN_CM;
+                if (romboAltoCm < ROMBO_ESTIRADO_MIN_CM) romboAltoCm = ROMBO_ESTIRADO_MIN_CM;
+            }
+            
+            // Calcular dimensiones finales del retazo
+            const anchoConEstirar = retazoAncho * (romboAnchoCm / 100);
+            const altoConEstirar = retazoAlto * (romboAltoCm / 100);
+            
+            // Verificar si alcanza
+            const alcanzaAncho = anchoConEstirar >= objetivoAncho;
+            const alcanzaAlto = altoConEstirar >= objetivoAlto;
+            const alcanzaTotal = alcanzaAncho && alcanzaAlto;
+            
+            // Calcular porcentajes finales de estiramiento
+            const estiramientoFinalAncho = ((romboAnchoCm / ROMBO_NORMAL_CM) - 1) * 100;
+            const estiramientoFinalAlto = ((romboAltoCm / ROMBO_NORMAL_CM) - 1) * 100;
+            
+            // Mostrar resultados
+            elementos.estirarResult.style.display = 'block';
+            
+            // Actualizar valores de comparación
+            document.getElementById('sin-estirar-dim').textContent = 
+                `${anchoSinEstirar.toFixed(2)}×${altoSinEstirar.toFixed(2)}m`;
+            document.getElementById('sin-estirar-cubre').textContent = 
+                (anchoSinEstirar >= objetivoAncho && altoSinEstirar >= objetivoAlto) ? '✅ Alcanza' : '❌ No alcanza';
+            
+            document.getElementById('con-estirar-dim').textContent = 
+                `${anchoConEstirar.toFixed(2)}×${altoConEstirar.toFixed(2)}m`;
+            document.getElementById('rombo-estirado-dim').textContent = 
+                `${romboAnchoCm.toFixed(1)}×${romboAltoCm.toFixed(1)} cm`;
+            document.getElementById('con-estirar-cubre').textContent = 
+                alcanzaTotal ? '✅ Alcanza' : '❌ No alcanza';
+            
+            document.getElementById('objetivo-estirar-dim').textContent = 
+                `${objetivoAncho.toFixed(2)}×${objetivoAlto.toFixed(2)}m`;
+            
+            document.getElementById('estiramiento-aplicado').textContent = 
+                `${Math.max(estiramientoFinalAncho, estiramientoFinalAlto).toFixed(1)}%`;
+            document.getElementById('distribucion-estiramiento').textContent = 
+                `(${estiramientoFinalAncho.toFixed(1)}% ancho, ${estiramientoFinalAlto.toFixed(1)}% alto)`;
+            
+            // Detalle de la estrategia
+            const estrategiaDetalle = document.getElementById('estrategia-detalle');
+            let detalleHTML = '';
+            
+            if (estrategiaActiva === 'optimizar') {
+                detalleHTML = `
+                    <div class="result-values" style="margin-top: 1rem;">
+                        <div class="result-value">
+                            <div class="label">Estrategia aplicada</div>
+                            <div class="value">Optimización automática</div>
+                            <div class="sub-value">${alcanzaTotal ? 'Solución encontrada' : 'No se encontró solución óptima'}</div>
+                        </div>
+                        <div class="result-value">
+                            <div class="label">Área del retazo</div>
+                            <div class="value">${(anchoConEstirar * altoConEstirar).toFixed(2)} m²</div>
+                            <div class="sub-value">Área objetivo: ${(objetivoAncho * objetivoAlto).toFixed(2)} m²</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detalleHTML = `
+                    <div class="result-values" style="margin-top: 1rem;">
+                        <div class="result-value">
+                            <div class="label">Estrategia aplicada</div>
+                            <div class="value">Control manual</div>
+                            <div class="sub-value">Ajusta los sliders para optimizar</div>
+                        </div>
+                        <div class="result-value">
+                            <div class="label">Estado actual</div>
+                            <div class="value">${alcanzaTotal ? '✅ Cubre' : '❌ No cubre'}</div>
+                            <div class="sub-value">${alcanzaAncho ? '✅ Ancho OK' : '❌ Falta ancho'} | ${alcanzaAlto ? '✅ Alto OK' : '❌ Falta alto'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            estrategiaDetalle.innerHTML = detalleHTML;
+            
+            // Establecer color según resultado
+            if (alcanzaTotal) {
+                elementos.estirarResult.className = 'result result-success';
+            } else if (Math.abs(anchoConEstirar - objetivoAncho) < 0.1 || Math.abs(altoConEstirar - objetivoAlto) < 0.1) {
+                elementos.estirarResult.className = 'result result-warning';
+            } else {
+                elementos.estirarResult.className = 'result result-danger';
+            }
+            
+            // Actualizar sliders manuales con valores calculados
+            elementos.estirarAnchoSlider.value = estiramientoFinalAncho.toFixed(1);
+            elementos.estirarAltoSlider.value = estiramientoFinalAlto.toFixed(1);
+            elementos.estirarAnchoValue.textContent = estiramientoFinalAncho.toFixed(1) + '%';
+            elementos.estirarAltoValue.textContent = estiramientoFinalAlto.toFixed(1) + '%';
+        }
+        
         // CÁLCULO MODO METROS LINEALES
         function calcularMetros() {
             const metros = parseFloat(elementos.metrosInput.value) || 1.0;
@@ -1658,7 +2202,7 @@
             }
         }
         
-        // CÁLCULO MODO SUPERFICIE (CON MARGEN DISTRIBUIDO)
+        // CÁLCULO MODO SUPERFICIE
         function calcularSuperficie() {
             const ancho = parseFloat(elementos.anchoInput.value) || 1.0;
             const alto = parseFloat(elementos.altoInput.value) || 1.0;
@@ -1717,7 +2261,7 @@
             }
         }
         
-        // CÁLCULO MODO PRESUPUESTO (RED POR M², IVA OPCIONAL)
+        // CÁLCULO MODO PRESUPUESTO
         function calcularPresupuesto() {
             const ancho = parseFloat(elementos.presAncho.value) || 2.0;
             const alto = parseFloat(elementos.presAlto.value) || 1.5;
@@ -1894,7 +2438,7 @@
             
             textoPresupuesto += `TOTAL: $${datosPresupuesto.total.toFixed(2)}\n\n`;
             textoPresupuesto += `Nota: Los precios no incluyen mano de obra. Cotización válida por 30 días.\n`;
-            textoPresupuesto += `Ferretería Carnevale - Herramienta de cálculo v1.6`;
+            textoPresupuesto += `Ferretería Carnevale - Herramienta de cálculo v1.8`;
             
             // Copiar al portapapeles
             navigator.clipboard.writeText(textoPresupuesto)
@@ -1992,7 +2536,7 @@
                 
                 // Pie de página
                 doc.setFontSize(8);
-                doc.text('Ferretería Carnevale • Herramienta de cálculo de redes balconeras • v1.6', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+                doc.text('Ferretería Carnevale • Herramienta de cálculo de redes balconeras • v1.8', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
                 
                 // Guardar el PDF
                 const nombreArchivo = `Presupuesto_Red_Balconera_${datosPresupuesto.fecha.replace(/\//g, '-')}.pdf`;
@@ -2007,7 +2551,7 @@
             }
         }
         
-        // VALIDACIÓN DE RECORTE (MODO CRÍTICO)
+        // VALIDACIÓN DE RECORTE
         function validarRecorte() {
             const recorteAncho = parseInt(elementos.recorteAncho.value) || 10;
             const recorteAlto = parseInt(elementos.recorteAlto.value) || 18;
